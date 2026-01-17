@@ -1,4 +1,4 @@
-.PHONY: help dev build test clean docker-up docker-down migrate-up migrate-down
+.PHONY: help dev build test clean docker-up docker-down migrate-up migrate-down migrate-create
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -28,10 +28,13 @@ docker-down: ## Stop PostgreSQL container
 docker-logs: ## View PostgreSQL logs
 	docker-compose logs -f postgres
 
-migrate-up: ## Run database migrations (to be implemented in Phase 2)
-	@echo "Migrations will be added in Phase 2"
+migrate-up: ## Run database migrations
+	migrate -path migrations -database "postgresql://kotoba:kotoba_dev_password@localhost:5432/kotoba_db?sslmode=disable" up
 
-migrate-down: ## Rollback database migrations (to be implemented in Phase 2)
-	@echo "Migrations will be added in Phase 2"
+migrate-down: ## Rollback database migrations
+	migrate -path migrations -database "postgresql://kotoba:kotoba_dev_password@localhost:5432/kotoba_db?sslmode=disable" down
+
+migrate-create: ## Create a new migration file (usage: make migrate-create NAME=your_migration_name)
+	migrate create -ext sql -dir migrations -seq $(NAME)
 
 .DEFAULT_GOAL := help

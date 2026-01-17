@@ -50,8 +50,14 @@ go mod download
 ### 4. Run Database Migrations
 
 ```bash
-# Migrations will be added in Phase 2
+# Run all migrations
 make migrate-up
+
+# Rollback migrations (if needed)
+make migrate-down
+
+# Create a new migration
+make migrate-create NAME=your_migration_name
 ```
 
 ### 5. Start the Server
