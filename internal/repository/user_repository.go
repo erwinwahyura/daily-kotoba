@@ -95,3 +95,13 @@ func (r *UserRepository) EmailExists(email string) (bool, error) {
 	err := r.db.QueryRow(query, email).Scan(&exists)
 	return exists, err
 }
+
+func (r *UserRepository) UpdateUserLevel(userID, level string) error {
+	query := `
+		UPDATE users
+		SET current_jlpt_level = $1, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(query, level, userID)
+	return err
+}

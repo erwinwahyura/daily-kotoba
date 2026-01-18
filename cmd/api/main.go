@@ -43,15 +43,18 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	vocabRepo := repository.NewVocabRepository(db)
 	progressRepo := repository.NewProgressRepository(db)
+	placementRepo := repository.NewPlacementRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
+	placementService := services.NewPlacementService(placementRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	vocabHandler := handlers.NewVocabularyHandler(vocabService)
 	progressHandler := handlers.NewProgressHandler(vocabService)
+	placementHandler := handlers.NewPlacementHandler(placementService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -84,6 +87,14 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.GET("/me", middleware.AuthMiddleware(authService), authHandler.GetMe)
+		}
+
+		// Placement test routes
+		placement := v1.Group("/placement-test")
+		{
+			placement.GET("", placementHandler.GetPlacementTest) // Public: get questions
+			placement.POST("/submit", middleware.AuthMiddleware(authService), placementHandler.SubmitPlacementTest)
+			placement.GET("/result", middleware.AuthMiddleware(authService), placementHandler.GetUserTestResult)
 		}
 
 		// Protected routes
