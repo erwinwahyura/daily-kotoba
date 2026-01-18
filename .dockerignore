@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Development
+.env
+.env.local
+*.log
+tmp/
+*.tmp
+
+# Documentation
+README.md
+TODO.md
+project-context.md
+*.md
+
+# Test files
+*_test.go
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies (will be downloaded in container)
+vendor/
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main

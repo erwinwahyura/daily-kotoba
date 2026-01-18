@@ -4,12 +4,14 @@ A REST API for Kotoba, a Japanese vocabulary learning app with JLPT-based progre
 
 ## Features
 
-- User authentication with JWT
-- JLPT N5-N1 vocabulary progression
-- Daily word rotation with sequential learning
-- Progress tracking and statistics
-- Placement test for level assignment
-- Skip/mark words as known functionality
+- 🔐 User authentication with JWT
+- 📚 JLPT N5-N1 vocabulary progression (50 N4 words currently)
+- 📖 Daily word rotation with sequential learning
+- 📊 Progress tracking and statistics
+- ✅ Placement test for level assignment (20 questions)
+- ⏭️ Skip/mark words as known functionality
+- 🔄 Automatic streak tracking
+- 🎯 Intelligent level assignment based on test performance
 
 ## Tech Stack
 
@@ -60,24 +62,39 @@ make migrate-down
 make migrate-create NAME=your_migration_name
 ```
 
-### 5. Start the Server
+### 5. Seed Database
 
 ```bash
-make dev
+# Seed N4 vocabulary (50 words)
+go run cmd/seed/main.go
+
+# Seed placement test questions (20 questions)
+go run cmd/seed/seed_placement.go
+```
+
+### 6. Start the Server
+
+```bash
+make run
 # or
 go run cmd/api/main.go
 ```
 
 The API will be available at `http://localhost:8080`
 
-### 6. Test the API
+### 7. Test the API
 
 ```bash
 # Health check
 curl http://localhost:8080/health
 
-# API ping
-curl http://localhost:8080/api/ping
+# Get placement test
+curl http://localhost:8080/api/placement-test
+
+# Register a user
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
 ```
 
 ## Environment Variables
@@ -149,11 +166,69 @@ make clean           # Clean build artifacts
 
 ## API Documentation
 
-Comprehensive API documentation will be added in Phase 9.
+Full API documentation is available in [API.md](./API.md).
+
+### Quick Reference
+
+**Authentication:**
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user (protected)
+
+**Placement Test:**
+- `GET /api/placement-test` - Get 20 test questions
+- `POST /api/placement-test/submit` - Submit answers (protected)
+- `GET /api/placement-test/result` - Get test result (protected)
+
+**Vocabulary:**
+- `GET /api/vocab/daily` - Get today's word (protected)
+- `GET /api/vocab/:id` - Get specific word (protected)
+- `POST /api/vocab/:id/skip` - Skip to next word (protected)
+- `GET /api/vocab/level/:level` - Get words by level (protected)
+
+**Progress:**
+- `GET /api/progress` - Get user progress (protected)
+- `GET /api/progress/stats` - Get detailed stats (protected)
 
 ## Deployment
 
-Deployment guide for Hetzner VPS will be added in Phase 8.
+### Production Deployment
+
+Full deployment guide is available in [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+#### Quick Deploy with Docker
+
+```bash
+# 1. Create production environment file
+cp .env.production.example .env.production
+# Edit .env.production with your secure values
+
+# 2. Build and deploy
+./scripts/deploy.sh
+
+# Or manually:
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+#### Useful Scripts
+
+```bash
+./scripts/deploy.sh      # Deploy to production
+./scripts/migrate.sh     # Run database migrations
+./scripts/backup.sh      # Backup database
+```
+
+### Makefile Commands
+
+```bash
+make help            # Show all commands
+make docker-build    # Build production Docker image
+make docker-up       # Start production containers
+make docker-down     # Stop production containers
+make logs            # View container logs
+make seed-vocab      # Seed vocabulary data
+make seed-placement  # Seed placement test questions
+```
 
 ## License
 

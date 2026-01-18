@@ -1,40 +1,90 @@
-.PHONY: help dev build test clean docker-up docker-down migrate-up migrate-down migrate-create
+.PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down seed-vocab seed-placement logs
 
-help: ## Show this help message
-	@echo 'Usage: make [target]'
-	@echo ''
-	@echo 'Available targets:'
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# Default target
+help:
+	@echo "Available commands:"
+	@echo "  make build           - Build the Go application"
+	@echo "  make run             - Run the application locally"
+	@echo "  make test            - Run tests"
+	@echo "  make clean           - Clean build artifacts"
+	@echo ""
+	@echo "Docker commands:"
+	@echo "  make docker-build    - Build Docker image"
+	@echo "  make docker-up       - Start production containers"
+	@echo "  make docker-down     - Stop production containers"
+	@echo "  make logs            - View container logs"
+	@echo ""
+	@echo "Database commands:"
+	@echo "  make migrate-up      - Run database migrations"
+	@echo "  make migrate-down    - Rollback migrations"
+	@echo "  make seed-vocab      - Seed vocabulary data"
+	@echo "  make seed-placement  - Seed placement test questions"
+	@echo ""
+	@echo "Development:"
+	@echo "  make dev-up          - Start development environment"
+	@echo "  make dev-down        - Stop development environment"
 
-dev: ## Run the development server
-	go run cmd/api/main.go
-
-build: ## Build the application binary
+# Build the application
+build:
+	@echo "Building application..."
 	go build -o bin/kotoba-api cmd/api/main.go
 
-test: ## Run all tests
+# Run the application locally
+run:
+	@echo "Running application..."
+	go run cmd/api/main.go
+
+# Run tests
+test:
+	@echo "Running tests..."
 	go test -v ./...
 
-clean: ## Clean build artifacts
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
 	rm -rf bin/
-	go clean
+	rm -f main
 
-docker-up: ## Start PostgreSQL with Docker Compose
+# Docker build
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t kotoba-api:latest .
+
+# Start production containers
+docker-up:
+	@echo "Starting production containers..."
+	docker-compose -f docker-compose.prod.yml up -d
+	@echo "Waiting for services to be ready..."
+	sleep 10
+	@echo "Services started! API available at http://localhost:8080"
+
+# Stop production containers
+docker-down:
+	@echo "Stopping production containers..."
+	docker-compose -f docker-compose.prod.yml down
+
+# View logs
+logs:
+	docker-compose -f docker-compose.prod.yml logs -f
+
+# Seed vocabulary data
+seed-vocab:
+	@echo "Seeding vocabulary data..."
+	go run cmd/seed/main.go
+	@echo "Vocabulary seeded!"
+
+# Seed placement test questions
+seed-placement:
+	@echo "Seeding placement test questions..."
+	go run cmd/seed/seed_placement.go
+	@echo "Placement test questions seeded!"
+
+# Development environment
+dev-up:
+	@echo "Starting development environment..."
 	docker-compose up -d
+	@echo "Development database started!"
 
-docker-down: ## Stop PostgreSQL container
+dev-down:
+	@echo "Stopping development environment..."
 	docker-compose down
-
-docker-logs: ## View PostgreSQL logs
-	docker-compose logs -f postgres
-
-migrate-up: ## Run database migrations
-	migrate -path migrations -database "postgresql://kotoba:kotoba_dev_password@localhost:5432/kotoba_db?sslmode=disable" up
-
-migrate-down: ## Rollback database migrations
-	migrate -path migrations -database "postgresql://kotoba:kotoba_dev_password@localhost:5432/kotoba_db?sslmode=disable" down
-
-migrate-create: ## Create a new migration file (usage: make migrate-create NAME=your_migration_name)
-	migrate create -ext sql -dir migrations -seq $(NAME)
-
-.DEFAULT_GOAL := help
