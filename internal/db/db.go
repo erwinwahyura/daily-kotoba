@@ -128,16 +128,82 @@ func (db *DB) LimitOffset(limit, offset int) string {
 	return fmt.Sprintf("LIMIT %d OFFSET %d", limit, offset)
 }
 
-// InitializeSQLite sets up SQLite with required PRAGMAs
+// InitializeSQLite sets up SQLite with performance PRAGMAs
+// Based on: https://phiresky.github.io/blog/2020/sqlite-performance-tuning/
 func (db *DB) InitializeSQLite() error {
 	if db.Driver != "sqlite" {
 		return nil
 	}
-	
-	_, err := db.Exec(`
-		PRAGMA foreign_keys = ON;
-		PRAGMA journal_mode = WAL;
-		PRAGMA synchronous = NORMAL;
-	`)
+
+	// Essential pragmas for every connection
+	pragmas := []string{
+		"PRAGMA foreign_keys = ON",
+		"PRAGMA journal_mode = WAL",           // Enable WAL mode for concurrent readers
+		"PRAGMA synchronous = NORMAL",           // Safe with WAL, faster than FULL
+		"PRAGMA temp_store = memory",          // Store temp tables/indexes in memory
+		"PRAGMA mmap_size = 268435456",        // 256MB memory map (adjust based on RAM)
+		"PRAGMA wal_autocheckpoint = 1000",    // Checkpoint every 1000 pages (prevents WAL growth)
+	}
+
+	for _, pragma := range pragmas {
+		if _, err := db.Exec(pragma); err != nil {
+			return fmt.Errorf("failed to execute %s: %w", pragma, err)
+		}
+	}
+
+	return nil
+}
+
+// Optimize runs PRAGMA optimize before closing database connection
+// Recommended for long-running applications
+func (db *DB) Optimize() error {
+	if db.Driver != "sqlite" {
+		return nil
+	}
+	_, err := db.Exec("PRAGMA optimize")
+	return err
+}
+
+// CheckpointWAL manually checkpoints the WAL file
+// Use this periodically to prevent WAL from growing too large
+// 'passive' = don't block readers, 'full' = block but complete, 'truncate' = reset WAL
+func (db *DB) CheckpointWAL(mode string) error {
+	if db.Driver != "sqlite" {
+		return nil
+	}
+	if mode == "" {
+		mode = "passive"
+	}
+	_, err := db.Exec(fmt.Sprintf("PRAGMA wal_checkpoint(%s)", mode))
+	return err
+}
+
+// Vacuum reclaims storage and defragments database
+// Run this during low-traffic periods (expensive operation)
+func (db *DB) Vacuum() error {
+	if db.Driver != "sqlite" {
+		return nil
+	}
+	_, err := db.Exec("VACUUM")
+	return err
+}
+
+// EnableIncrementalVacuum sets up auto-vacuum for databases that shrink regularly
+// Run once: db.EnableIncrementalVacuum() on fresh database
+func (db *DB) EnableIncrementalVacuum() error {
+	if db.Driver != "sqlite" {
+		return nil
+	}
+	_, err := db.Exec("PRAGMA auto_vacuum = incremental")
+	return err
+}
+
+// IncrementalVacuum moves freelist pages to end and truncates
+// Run periodically if you delete data regularly
+func (db *DB) IncrementalVacuum() error {
+	if db.Driver != "sqlite" {
+		return nil
+	}
+	_, err := db.Exec("PRAGMA incremental_vacuum")
 	return err
 }

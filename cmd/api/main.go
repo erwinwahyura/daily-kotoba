@@ -4,6 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -150,8 +154,52 @@ func main() {
 	// Start server
 	addr := fmt.Sprintf(":%s", cfg.Server.Port)
 	log.Printf("Starting server on %s (environment: %s)", addr, cfg.Server.Env)
+	log.Printf("Database: %s", cfg.DB.Driver)
 
-	if err := router.Run(addr); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	// Run server in goroutine
+	go func() {
+		if err := router.Run(addr); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// For SQLite: periodic WAL checkpoint to prevent unbounded growth
+	if cfg.DB.Driver == "sqlite" {
+		go func() {
+			ticker := time.NewTicker(5 * time.Minute)
+			defer ticker.Stop()
+			for range ticker.C {
+				if err := wrappedDB.CheckpointWAL("passive"); err != nil {
+					log.Printf("WAL checkpoint error: %v", err)
+				}
+			}
+		}()
+		log.Println("Started periodic WAL checkpointing (every 5min)")
 	}
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server...")
+
+	// SQLite optimization before shutdown
+	if cfg.DB.Driver == "sqlite" {
+		log.Println("Running SQLite optimization...")
+		if err := wrappedDB.Optimize(); err != nil {
+			log.Printf("Optimization error: %v", err)
+		}
+		// Final checkpoint
+		if err := wrappedDB.CheckpointWAL("full"); err != nil {
+			log.Printf("Final checkpoint error: %v", err)
+		}
+	}
+
+	// Close database
+	if err := sqlDB.Close(); err != nil {
+		log.Printf("Database close error: %v", err)
+	}
+
+	log.Println("Server stopped")
 }
