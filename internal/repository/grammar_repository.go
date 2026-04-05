@@ -5,14 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type GrammarRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewGrammarRepository(db *sql.DB) *GrammarRepository {
+func NewGrammarRepository(db *db.DB) *GrammarRepository {
 	return &GrammarRepository{db: db}
 }
 

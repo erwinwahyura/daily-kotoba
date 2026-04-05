@@ -7,7 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/yourusername/kotoba-api/internal/config"
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/handlers"
 	"github.com/yourusername/kotoba-api/internal/middleware"
 	"github.com/yourusername/kotoba-api/internal/repository"
@@ -22,29 +24,42 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := sql.Open("postgres", cfg.GetDatabaseDSN())
+	sqlDB, err := cfg.GetDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
-	// Configure connection pool
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(5)
+	// Configure connection pool (only for Postgres)
+	if cfg.DB.Driver == "postgres" {
+		sqlDB.SetMaxOpenConns(25)
+		sqlDB.SetMaxIdleConns(5)
+	}
 
 	// Test database connection
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
-	log.Println("Successfully connected to database")
+	log.Printf("Successfully connected to %s database", cfg.DB.Driver)
+
+	// Wrap database with driver-aware abstraction
+	wrappedDB := db.New(sqlDB, cfg.DB.Driver)
+	
+	// Initialize SQLite if needed
+	if cfg.DB.Driver == "sqlite" {
+		if err := wrappedDB.InitializeSQLite(); err != nil {
+			log.Fatalf("Failed to initialize SQLite: %v", err)
+		}
+		log.Println("SQLite initialized with WAL mode")
+	}
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	vocabRepo := repository.NewVocabRepository(db)
-	progressRepo := repository.NewProgressRepository(db)
-	placementRepo := repository.NewPlacementRepository(db)
-	grammarRepo := repository.NewGrammarRepository(db)
+	userRepo := repository.NewUserRepository(wrappedDB)
+	vocabRepo := repository.NewVocabRepository(wrappedDB)
+	progressRepo := repository.NewProgressRepository(wrappedDB)
+	placementRepo := repository.NewPlacementRepository(wrappedDB)
+	grammarRepo := repository.NewGrammarRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)

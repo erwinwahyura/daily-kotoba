@@ -5,14 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type VocabRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewVocabRepository(db *sql.DB) *VocabRepository {
+func NewVocabRepository(db *db.DB) *VocabRepository {
 	return &VocabRepository{db: db}
 }
 

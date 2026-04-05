@@ -6,7 +6,9 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/yourusername/kotoba-api/internal/config"
+	"github.com/yourusername/kotoba-api/internal/db"
 )
 
 type PlacementQuestion struct {
@@ -25,21 +27,26 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := sql.Open("postgres", cfg.GetDatabaseDSN())
+	sqlDB, err := cfg.GetDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	wrappedDB := db.New(sqlDB, cfg.DB.Driver)
+	if cfg.DB.Driver == "sqlite" {
+		wrappedDB.InitializeSQLite()
 	}
 
 	log.Println("Connected to database successfully")
 
 	// Clear existing placement test questions
 	log.Println("Clearing existing placement test questions...")
-	_, err = db.Exec("DELETE FROM placement_questions")
+	_, err = wrappedDB.Exec("DELETE FROM placement_questions")
 	if err != nil {
 		log.Fatalf("Failed to clear existing questions: %v", err)
 	}
@@ -207,7 +214,7 @@ func main() {
 			log.Fatalf("Failed to marshal wrong answers for question %d: %v", q.OrderIndex, err)
 		}
 
-		_, err = db.Exec(`
+		_, err = wrappedDB.Exec(`
 			INSERT INTO placement_questions
 			(question_text, correct_answer, wrong_answers, difficulty_level, order_index)
 			VALUES ($1, $2, $3, $4, $5)

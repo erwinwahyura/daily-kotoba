@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type UserRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
+func NewUserRepository(db *db.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 

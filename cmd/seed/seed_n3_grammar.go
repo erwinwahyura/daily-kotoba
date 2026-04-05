@@ -5,7 +5,9 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/yourusername/kotoba-api/internal/config"
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 	"github.com/yourusername/kotoba-api/internal/repository"
 )
@@ -16,27 +18,32 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	db, err := sql.Open("postgres", cfg.GetDatabaseDSN())
+	sqlDB, err := cfg.GetDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	wrappedDB := db.New(sqlDB, cfg.DB.Driver)
+	if cfg.DB.Driver == "sqlite" {
+		wrappedDB.InitializeSQLite()
 	}
 
 	log.Println("Connected to database successfully")
 
 	// Clear existing N3 grammar patterns
 	log.Println("Clearing existing N3 grammar patterns...")
-	_, err = db.Exec("DELETE FROM grammar_patterns WHERE jlpt_level = 'N3'")
+	_, err = wrappedDB.Exec("DELETE FROM grammar_patterns WHERE jlpt_level = 'N3'")
 	if err != nil {
 		log.Fatalf("Failed to clear existing patterns: %v", err)
 	}
 	log.Println("Existing N3 grammar patterns cleared")
 
-	grammarRepo := repository.NewGrammarRepository(db)
+	grammarRepo := repository.NewGrammarRepository(wrappedDB)
 
 	// Seed N3 grammar patterns (high-priority forms that learners confuse)
 	patterns := []models.GrammarPattern{

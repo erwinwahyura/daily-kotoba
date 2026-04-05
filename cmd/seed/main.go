@@ -5,7 +5,9 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/yourusername/kotoba-api/internal/config"
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 	"github.com/yourusername/kotoba-api/internal/repository"
 	"github.com/yourusername/kotoba-api/internal/services"
@@ -19,14 +21,19 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := sql.Open("postgres", cfg.GetDatabaseDSN())
+	sqlDB, err := cfg.GetDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	wrappedDB := db.New(sqlDB, cfg.DB.Driver)
+	if cfg.DB.Driver == "sqlite" {
+		wrappedDB.InitializeSQLite()
 	}
 
 	log.Println("Connected to database successfully")
@@ -40,9 +47,9 @@ func main() {
 	log.Println("Existing N4 vocabulary cleared")
 
 	// Initialize repositories and services
-	vocabRepo := repository.NewVocabRepository(db)
-	progressRepo := repository.NewProgressRepository(db)
-	userRepo := repository.NewUserRepository(db)
+	vocabRepo := repository.NewVocabRepository(wrappedDB)
+	progressRepo := repository.NewProgressRepository(wrappedDB)
+	userRepo := repository.NewUserRepository(wrappedDB)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
 
 	// Seed N4 vocabulary

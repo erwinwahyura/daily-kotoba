@@ -5,14 +5,15 @@ import (
 	"errors"
 	"time"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type ProgressRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewProgressRepository(db *sql.DB) *ProgressRepository {
+func NewProgressRepository(db *db.DB) *ProgressRepository {
 	return &ProgressRepository{db: db}
 }
 
