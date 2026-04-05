@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.hetzner
     ports:
-      - "8080:8080"
+      - "8090:8090"
     volumes:
       # Bind mount to Hetzner persistent volume
       # Host path: /mnt/apps-data (symlink to /mnt/HC_Volume_105332474)
@@ -16,7 +16,7 @@ services:
       - ENV=production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
       interval: 30s
       timeout: 10s
       retries: 3
