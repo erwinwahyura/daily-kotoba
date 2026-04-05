@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type PlacementRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewPlacementRepository(db *sql.DB) *PlacementRepository {
+func NewPlacementRepository(db *db.DB) *PlacementRepository {
 	return &PlacementRepository{db: db}
 }
 

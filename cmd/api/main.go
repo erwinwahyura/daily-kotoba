@@ -4,10 +4,16 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/yourusername/kotoba-api/internal/config"
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/handlers"
 	"github.com/yourusername/kotoba-api/internal/middleware"
 	"github.com/yourusername/kotoba-api/internal/repository"
@@ -22,39 +28,55 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := sql.Open("postgres", cfg.GetDatabaseDSN())
+	sqlDB, err := cfg.GetDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer sqlDB.Close()
 
-	// Configure connection pool
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(5)
+	// Configure connection pool (only for Postgres)
+	if cfg.DB.Driver == "postgres" {
+		sqlDB.SetMaxOpenConns(25)
+		sqlDB.SetMaxIdleConns(5)
+	}
 
 	// Test database connection
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
-	log.Println("Successfully connected to database")
+	log.Printf("Successfully connected to %s database", cfg.DB.Driver)
+
+	// Wrap database with driver-aware abstraction
+	wrappedDB := db.New(sqlDB, cfg.DB.Driver)
+	
+	// Initialize SQLite if needed
+	if cfg.DB.Driver == "sqlite" {
+		if err := wrappedDB.InitializeSQLite(); err != nil {
+			log.Fatalf("Failed to initialize SQLite: %v", err)
+		}
+		log.Println("SQLite initialized with WAL mode")
+	}
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	vocabRepo := repository.NewVocabRepository(db)
-	progressRepo := repository.NewProgressRepository(db)
-	placementRepo := repository.NewPlacementRepository(db)
+	userRepo := repository.NewUserRepository(wrappedDB)
+	vocabRepo := repository.NewVocabRepository(wrappedDB)
+	progressRepo := repository.NewProgressRepository(wrappedDB)
+	placementRepo := repository.NewPlacementRepository(wrappedDB)
+	grammarRepo := repository.NewGrammarRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
 	placementService := services.NewPlacementService(placementRepo, userRepo)
+	grammarService := services.NewGrammarService(grammarRepo, progressRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	vocabHandler := handlers.NewVocabularyHandler(vocabService)
 	progressHandler := handlers.NewProgressHandler(vocabService)
 	placementHandler := handlers.NewPlacementHandler(placementService)
+	grammarHandler := handlers.NewGrammarHandler(grammarService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -118,14 +140,66 @@ func main() {
 				progress.GET("", progressHandler.GetProgress)
 				progress.GET("/stats", progressHandler.GetStats)
 			}
+
+			// Grammar pattern routes
+			grammar := protected.Group("/grammar")
+			{
+				grammar.GET("/daily", grammarHandler.GetDailyPattern)
+				grammar.GET("/:id", grammarHandler.GetPatternByID)
+			}
+			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
 		}
 	}
 
 	// Start server
 	addr := fmt.Sprintf(":%s", cfg.Server.Port)
 	log.Printf("Starting server on %s (environment: %s)", addr, cfg.Server.Env)
+	log.Printf("Database: %s", cfg.DB.Driver)
 
-	if err := router.Run(addr); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	// Run server in goroutine
+	go func() {
+		if err := router.Run(addr); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// For SQLite: periodic WAL checkpoint to prevent unbounded growth
+	if cfg.DB.Driver == "sqlite" {
+		go func() {
+			ticker := time.NewTicker(5 * time.Minute)
+			defer ticker.Stop()
+			for range ticker.C {
+				if err := wrappedDB.CheckpointWAL("passive"); err != nil {
+					log.Printf("WAL checkpoint error: %v", err)
+				}
+			}
+		}()
+		log.Println("Started periodic WAL checkpointing (every 5min)")
 	}
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server...")
+
+	// SQLite optimization before shutdown
+	if cfg.DB.Driver == "sqlite" {
+		log.Println("Running SQLite optimization...")
+		if err := wrappedDB.Optimize(); err != nil {
+			log.Printf("Optimization error: %v", err)
+		}
+		// Final checkpoint
+		if err := wrappedDB.CheckpointWAL("full"); err != nil {
+			log.Printf("Final checkpoint error: %v", err)
+		}
+	}
+
+	// Close database
+	if err := sqlDB.Close(); err != nil {
+		log.Printf("Database close error: %v", err)
+	}
+
+	log.Println("Server stopped")
 }

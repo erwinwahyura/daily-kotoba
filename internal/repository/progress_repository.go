@@ -5,14 +5,15 @@ import (
 	"errors"
 	"time"
 
+	"github.com/yourusername/kotoba-api/internal/db"
 	"github.com/yourusername/kotoba-api/internal/models"
 )
 
 type ProgressRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
-func NewProgressRepository(db *sql.DB) *ProgressRepository {
+func NewProgressRepository(db *db.DB) *ProgressRepository {
 	return &ProgressRepository{db: db}
 }
 
@@ -138,6 +139,57 @@ func (r *ProgressRepository) IncrementWordsSkipped(userID string) error {
 	query := `
 		UPDATE user_progress
 		SET words_skipped_count = words_skipped_count + 1,
+		    updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = $1
+	`
+	_, err := r.db.Exec(query, userID)
+	return err
+}
+
+// Grammar progress methods
+
+func (r *ProgressRepository) IncrementGrammarIndex(userID string) (*models.UserProgress, error) {
+	query := `
+		UPDATE user_progress
+		SET current_grammar_index = current_grammar_index + 1,
+		    updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = $1
+		RETURNING user_id, current_vocab_index, current_grammar_index, last_word_id, last_grammar_id,
+		          streak_days, last_study_date, words_learned_count, words_skipped_count,
+		          grammar_learned_count, updated_at
+	`
+	progress := &models.UserProgress{}
+	err := r.db.QueryRow(query, userID).Scan(
+		&progress.UserID,
+		&progress.CurrentVocabIndex,
+		&progress.CurrentGrammarIndex,
+		&progress.LastWordID,
+		&progress.LastGrammarID,
+		&progress.StreakDays,
+		&progress.LastStudyDate,
+		&progress.WordsLearnedCount,
+		&progress.WordsSkippedCount,
+		&progress.GrammarLearnedCount,
+		&progress.UpdatedAt,
+	)
+	return progress, err
+}
+
+func (r *ProgressRepository) MarkGrammarStatus(userID, grammarID, status string) error {
+	query := `
+		INSERT INTO user_grammar_status (user_id, grammar_id, status)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, grammar_id)
+		DO UPDATE SET status = EXCLUDED.status, marked_at = CURRENT_TIMESTAMP
+	`
+	_, err := r.db.Exec(query, userID, grammarID, status)
+	return err
+}
+
+func (r *ProgressRepository) IncrementGrammarLearned(userID string) error {
+	query := `
+		UPDATE user_progress
+		SET grammar_learned_count = grammar_learned_count + 1,
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE user_id = $1
 	`
