@@ -1,5 +1,5 @@
 // Package db provides database abstraction for PostgreSQL and SQLite
-db
+package db
 
 import (
 	"database/sql"
