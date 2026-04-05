@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/models"
 	"github.com/yourusername/kotoba-api/internal/services"
 	"github.com/yourusername/kotoba-api/internal/utils"
 )
