@@ -44,17 +44,20 @@ func main() {
 	vocabRepo := repository.NewVocabRepository(db)
 	progressRepo := repository.NewProgressRepository(db)
 	placementRepo := repository.NewPlacementRepository(db)
+	grammarRepo := repository.NewGrammarRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
 	placementService := services.NewPlacementService(placementRepo, userRepo)
+	grammarService := services.NewGrammarService(grammarRepo, progressRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	vocabHandler := handlers.NewVocabularyHandler(vocabService)
 	progressHandler := handlers.NewProgressHandler(vocabService)
 	placementHandler := handlers.NewPlacementHandler(placementService)
+	grammarHandler := handlers.NewGrammarHandler(grammarService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -118,6 +121,14 @@ func main() {
 				progress.GET("", progressHandler.GetProgress)
 				progress.GET("/stats", progressHandler.GetStats)
 			}
+
+			// Grammar pattern routes
+			grammar := protected.Group("/grammar")
+			{
+				grammar.GET("/daily", grammarHandler.GetDailyPattern)
+				grammar.GET("/:id", grammarHandler.GetPatternByID)
+			}
+			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
 		}
 	}
 

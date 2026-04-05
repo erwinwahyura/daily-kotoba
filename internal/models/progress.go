@@ -3,14 +3,17 @@ package models
 import "time"
 
 type UserProgress struct {
-	UserID            string    `json:"user_id" db:"user_id"`
-	CurrentVocabIndex int       `json:"current_vocab_index" db:"current_vocab_index"`
-	LastWordID        *string   `json:"last_word_id" db:"last_word_id"`
-	StreakDays        int       `json:"streak_days" db:"streak_days"`
-	LastStudyDate     *time.Time `json:"last_study_date" db:"last_study_date"`
-	WordsLearnedCount int       `json:"words_learned_count" db:"words_learned_count"`
-	WordsSkippedCount int       `json:"words_skipped_count" db:"words_skipped_count"`
-	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
+	UserID              string     `json:"user_id" db:"user_id"`
+	CurrentVocabIndex   int        `json:"current_vocab_index" db:"current_vocab_index"`
+	CurrentGrammarIndex int        `json:"current_grammar_index" db:"current_grammar_index"`
+	LastWordID          *string    `json:"last_word_id" db:"last_word_id"`
+	LastGrammarID       *string    `json:"last_grammar_id" db:"last_grammar_id"`
+	StreakDays          int        `json:"streak_days" db:"streak_days"`
+	LastStudyDate       *time.Time `json:"last_study_date" db:"last_study_date"`
+	WordsLearnedCount   int        `json:"words_learned_count" db:"words_learned_count"`
+	WordsSkippedCount   int        `json:"words_skipped_count" db:"words_skipped_count"`
+	GrammarLearnedCount int        `json:"grammar_learned_count" db:"grammar_learned_count"`
+	UpdatedAt           time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type UserVocabStatus struct {

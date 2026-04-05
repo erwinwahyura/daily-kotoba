@@ -18,6 +18,19 @@ type Vocabulary struct {
 	JLPTLevel           string          `json:"jlpt_level" db:"jlpt_level"`
 	IndexPosition       int             `json:"index_position" db:"index_position"`
 	CreatedAt           time.Time       `json:"created_at" db:"created_at"`
+	// Enhanced fields
+	RelatedWords        RelatedWords    `json:"related_words" db:"related_words"`
+	WordType            string          `json:"word_type" db:"word_type"`
+	Register            string          `json:"register" db:"register"`
+	CommonMistakes      string          `json:"common_mistakes" db:"common_mistakes"`
+}
+
+// RelatedWords stores synonyms, antonyms, and confusable words
+type RelatedWords struct {
+	Synonyms     []string `json:"synonyms"`
+	Antonyms     []string `json:"antonyms"`
+	Confusable   []string `json:"confusable"` // Words that look/sound similar
+	SeeAlso      []string `json:"see_also"`   // Related concepts
 }
 
 // ExampleSentences is a custom type for JSONB support
@@ -72,4 +85,22 @@ type PaginationResponse struct {
 	Limit      int `json:"limit"`
 	Total      int `json:"total"`
 	TotalPages int `json:"total_pages"`
+}
+
+// Scan implements sql.Scanner interface for RelatedWords
+func (rw *RelatedWords) Scan(value interface{}) error {
+	if value == nil {
+		*rw = RelatedWords{}
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal RelatedWords JSONB value")
+	}
+	return json.Unmarshal(bytes, rw)
+}
+
+// Value implements driver.Valuer interface for RelatedWords
+func (rw RelatedWords) Value() (driver.Value, error) {
+	return json.Marshal(rw)
 }
