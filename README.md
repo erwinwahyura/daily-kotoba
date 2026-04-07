@@ -1,131 +1,227 @@
-# Kotoba API
+# Kotoba API 🍃
 
-A REST API for Kotoba, a Japanese vocabulary learning app with JLPT-based progression and home screen widgets.
+A REST API for Kotoba, a Japanese vocabulary learning app with JLPT-based progression, home screen widgets, and intelligent grammar pattern learning.
+
+**Live API**: https://kotoba.erwarx.com
 
 ## Features
 
 - 🔐 User authentication with JWT
-- 📚 JLPT N5-N1 vocabulary progression (50 N4 words currently)
-- 📖 Daily word rotation with sequential learning
+- 📚 JLPT N5-N1 vocabulary progression with sample data
+- 📖 Daily word rotation with sequential learning + review cycles
+- 📖 N3-N1 grammar patterns with detailed pedagogy (examples, nuances, common mistakes)
 - 📊 Progress tracking and statistics
-- ✅ Placement test for level assignment (20 questions)
+- ✅ Placement test for level assignment
 - ⏭️ Skip/mark words as known functionality
 - 🔄 Automatic streak tracking
 - 🎯 Intelligent level assignment based on test performance
 
 ## Tech Stack
 
-- **Language**: Go 1.21+
+- **Language**: Go 1.25+
 - **Framework**: Gin
-- **Database**: PostgreSQL 16
+- **Database**: SQLite (single-node) / PostgreSQL (scalable)
 - **Authentication**: JWT tokens
 - **Password Hashing**: bcrypt (cost 12)
-
-## Prerequisites
-
-- Go 1.21 or higher
-- Docker and Docker Compose
-- PostgreSQL 16 (via Docker)
+- **Deployment**: Docker + Hetzner VPS
 
 ## Quick Start
 
-### 1. Clone and Setup
+### Using the Live API
 
-```bash
-git clone <repository-url>
-cd kotoba-api
-cp .env.example .env
-```
-
-### 2. Start PostgreSQL
-
-```bash
-docker-compose up -d
-```
-
-### 3. Install Dependencies
-
-```bash
-go mod download
-```
-
-### 4. Run Database Migrations
-
-```bash
-# Run all migrations
-make migrate-up
-
-# Rollback migrations (if needed)
-make migrate-down
-
-# Create a new migration
-make migrate-create NAME=your_migration_name
-```
-
-### 5. Seed Database
-
-```bash
-# Seed N4 vocabulary (50 words)
-go run cmd/seed/main.go
-
-# Seed placement test questions (20 questions)
-go run cmd/seed/seed_placement.go
-```
-
-### 6. Start the Server
-
-```bash
-make run
-# or
-go run cmd/api/main.go
-```
-
-The API will be available at `http://localhost:8080`
-
-### 7. Test the API
+The API is deployed at **https://kotoba.erwarx.com**
 
 ```bash
 # Health check
-curl http://localhost:8080/health
+curl https://kotoba.erwarx.com/health
 
-# Get placement test
-curl http://localhost:8080/api/placement-test
-
-# Register a user
-curl -X POST http://localhost:8080/api/auth/register \
+# Register
+curl -X POST https://kotoba.erwarx.com/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"your@email.com","password":"yourpassword","name":"Your Name"}'
+
+# Login (returns JWT token)
+curl -X POST https://kotoba.erwarx.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"your@email.com","password":"yourpassword"}'
+
+# Get daily vocabulary (protected)
+curl https://kotoba.erwarx.com/api/vocab/daily \
+  -H "Authorization: Bearer <your-jwt-token>"
+
+# Get daily grammar pattern (protected)
+curl https://kotoba.erwarx.com/api/grammar/daily \
+  -H "Authorization: Bearer <your-jwt-token>"
 ```
+
+### Local Development
+
+#### 1. Clone and Setup
+
+```bash
+git clone https://github.com/erwinwahyura/daily-kotoba.git
+cd daily-kotoba
+cp .env.example .env
+```
+
+#### 2. Start with Docker (recommended)
+
+```bash
+# Start with SQLite (no external DB needed)
+make docker-build
+make docker-up
+
+# Or with PostgreSQL
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### 3. The server auto-migrates and auto-seeds on startup
+
+Migrations run automatically. Sample data (vocabulary, grammar, placement questions) is loaded from `seeds/` directory on first start.
+
+#### 4. API available at `http://localhost:8080`
 
 ## Environment Variables
 
 See `.env.example` for all configuration options.
 
-Key variables:
-- `PORT`: Server port (default: 8080)
-- `DB_HOST`: PostgreSQL host
-- `DB_PASSWORD`: Database password (required)
-- `JWT_SECRET`: Secret key for JWT tokens (required)
+### Key Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | `8080` |
+| `ENV` | Environment mode | `development` |
+| `JWT_SECRET` | JWT signing secret | (required) |
+| `DB_DRIVER` | `sqlite` or `postgres` | `postgres` |
+| `SQLITE_PATH` | Path for SQLite file | `./kotoba.db` |
+| `MIGRATIONS_DIR` | Migration files location | `./migrations` |
+| `SEEDS_DIR` | Seed data files location | `./seeds` |
+
+## API Documentation
+
+Full API documentation is available in [API.md](./API.md).
+
+### Authentication (All endpoints return JWT)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/register` | No | Create new account |
+| `POST` | `/api/auth/login` | No | Login, get token |
+| `GET` | `/api/auth/me` | Yes | Get current user |
+
+### Vocabulary Learning
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/vocab/daily` | Yes | Get today's word |
+| `GET` | `/api/vocab/:id` | Yes | Get specific word |
+| `POST` | `/api/vocab/:id/skip` | Yes | Skip/mark known |
+| `GET` | `/api/vocab/level/:level` | Yes | Get words by JLPT level |
+
+### Grammar Patterns (N3-N1)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/grammar/daily` | Yes | Get today's grammar pattern |
+| `GET` | `/api/grammar/:id` | Yes | Get specific pattern |
+| `GET` | `/api/grammar/level/:level` | Yes | Browse by level |
+
+### Progress & Stats
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/progress` | Yes | Current progress |
+| `GET` | `/api/progress/stats` | Yes | Detailed statistics |
+
+### Placement Test
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/placement-test` | No | Get 20 test questions |
+| `POST` | `/api/placement-test/submit` | Yes | Submit answers |
+| `GET` | `/api/placement-test/result` | Yes | View result & assigned level |
+
+### Test Account
+
+```bash
+# Login with test account
+curl -X POST https://kotoba.erwarx.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"hiru@erwarx.com","password":"kotoba2024"}'
+```
 
 ## Project Structure
 
 ```
-kotoba-api/
+daily-kotoba/
 ├── cmd/
-│   └── api/
-│       └── main.go              # Application entry point
+│   ├── api/
+│   │   └── main.go              # Application entry
+│   └── seed/
+│       ├── main.go              # Vocabulary seeding
+│       ├── seed_placement.go    # Placement questions
+│       └── seed_n3_grammar.go   # Grammar patterns
 ├── internal/
-│   ├── config/                  # Configuration management
-│   ├── handlers/                # HTTP request handlers
-│   ├── middleware/              # HTTP middleware
+│   ├── config/                  # Configuration
+│   ├── db/                      # Database + migrations + seeding
+│   ├── handlers/                # HTTP handlers
+│   ├── middleware/              # Auth middleware
 │   ├── models/                  # Data models
-│   ├── repository/              # Database access layer
+│   ├── repository/              # Data access layer
 │   ├── services/                # Business logic
-│   └── utils/                   # Utility functions
-├── migrations/                  # Database migrations (coming in Phase 2)
-├── docker-compose.yml           # Local PostgreSQL setup
-├── .env.example                 # Example environment variables
+│   └── utils/                   # Utilities
+├── migrations/                  # Database migrations
+│   ├── *.up.sql                # PostgreSQL versions
+│   └── *.sqlite.up.sql         # SQLite versions
+├── seeds/                       # Seed data (JSON)
+│   ├── 001_sample_n5_vocab.json
+│   ├── 002_sample_n3_grammar.json
+│   └── 003_sample_placement.json
+├── docker-compose.hetzner.yml   # Production deployment
+├── Dockerfile.hetzner           # Production build
 └── README.md                    # This file
+```
+
+## Deployment 🚀
+
+### Hetzner VPS (Current Production)
+
+The API is deployed on Hetzner CX23 with Docker.
+
+**Key Features:**
+- **Auto-migrations**: Database schema updates on startup
+- **Auto-seeding**: Sample data loaded from `seeds/` folder
+- **SQLite with WAL mode**: Fast, single-node deployment
+- **Persistent volume**: Data stored at `/mnt/apps-data`
+
+#### Deploy Changes
+
+```bash
+ssh deploy@46.224.127.221
+cd /opt/daily-kotoba
+git pull origin main
+docker-compose -f docker-compose.hetzner.yml down
+docker-compose -f docker-compose.hetzner.yml up -d --build
+```
+
+### First-Time Setup
+
+```bash
+# On server:
+mkdir -p /opt/daily-kotoba
+cd /opt/daily-kotoba
+git clone https://github.com/erwinwahyura/daily-kotoba.git .
+cp .env.hetzner .env
+# Edit .env with secure JWT_SECRET
+docker-compose -f docker-compose.hetzner.yml up -d --build
+```
+
+### Local Production Test
+
+```bash
+# Build and run with production settings
+make docker-build
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## Development
@@ -146,89 +242,46 @@ make build
 go build -o bin/kotoba-api cmd/api/main.go
 ```
 
-### Docker Commands
-
-```bash
-make docker-up       # Start PostgreSQL
-make docker-down     # Stop PostgreSQL
-make docker-logs     # View PostgreSQL logs
-```
-
-### Available Make Commands
-
-```bash
-make help            # Show all available commands
-make dev             # Run development server
-make build           # Build binary
-make test            # Run tests
-make clean           # Clean build artifacts
-```
-
-## API Documentation
-
-Full API documentation is available in [API.md](./API.md).
-
-### Quick Reference
-
-**Authentication:**
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user (protected)
-
-**Placement Test:**
-- `GET /api/placement-test` - Get 20 test questions
-- `POST /api/placement-test/submit` - Submit answers (protected)
-- `GET /api/placement-test/result` - Get test result (protected)
-
-**Vocabulary:**
-- `GET /api/vocab/daily` - Get today's word (protected)
-- `GET /api/vocab/:id` - Get specific word (protected)
-- `POST /api/vocab/:id/skip` - Skip to next word (protected)
-- `GET /api/vocab/level/:level` - Get words by level (protected)
-
-**Progress:**
-- `GET /api/progress` - Get user progress (protected)
-- `GET /api/progress/stats` - Get detailed stats (protected)
-
-## Deployment
-
-### Production Deployment
-
-Full deployment guide is available in [DEPLOYMENT.md](./DEPLOYMENT.md).
-
-#### Quick Deploy with Docker
-
-```bash
-# 1. Create production environment file
-cp .env.production.example .env.production
-# Edit .env.production with your secure values
-
-# 2. Build and deploy
-./scripts/deploy.sh
-
-# Or manually:
-docker-compose -f docker-compose.prod.yml up -d --build
-```
-
-#### Useful Scripts
-
-```bash
-./scripts/deploy.sh      # Deploy to production
-./scripts/migrate.sh     # Run database migrations
-./scripts/backup.sh      # Backup database
-```
-
 ### Makefile Commands
 
 ```bash
 make help            # Show all commands
-make docker-build    # Build production Docker image
-make docker-up       # Start production containers
-make docker-down     # Stop production containers
+make docker-build    # Build Docker image
+make docker-up       # Start containers
+make docker-down     # Stop containers
 make logs            # View container logs
-make seed-vocab      # Seed vocabulary data
-make seed-placement  # Seed placement test questions
 ```
+
+## Project Architecture
+
+### Auto-Migration System
+
+On startup, the API automatically:
+1. Creates `schema_migrations` tracking table
+2. Runs pending `.up.sql` migrations (PostgreSQL or SQLite variants)
+3. Skips already-applied migrations
+
+### Auto-Seeding System
+
+On startup, after migrations:
+1. Creates `schema_seeds` tracking table  
+2. Loads `.json` files from `seeds/` directory
+3. Inserts data only once per seed file
+4. Tracks applied seeds to avoid duplicates
+
+**Adding Data:** Simply add new `.json` files to `seeds/` and redeploy.
+
+### Database Support
+
+| Feature | PostgreSQL | SQLite |
+|---------|------------|--------|
+| Auto-migrations | ✅ | ✅ |
+| Auto-seeding | ✅ | ✅ |
+| WAL mode | N/A | ✅ (performance) |
+| Single-node | ❌ | ✅ |
+| Production scaling | ✅ | ⚠️ (limited) |
+
+**Current Production**: SQLite (simple, fast, single-node)
 
 ## License
 
