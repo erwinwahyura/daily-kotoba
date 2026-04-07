@@ -26,11 +26,13 @@ type UserVocabStatus struct {
 
 type ProgressStats struct {
 	CurrentVocabIndex   int               `json:"current_vocab_index"`
+	CurrentGrammarIndex int               `json:"current_grammar_index"`
 	CurrentLevel        string            `json:"current_level"`
 	StreakDays          int               `json:"streak_days"`
 	LastStudyDate       *time.Time        `json:"last_study_date"`
 	WordsLearned        int               `json:"words_learned"`
 	WordsSkipped        int               `json:"words_skipped"`
+	GrammarLearned      int               `json:"grammar_learned"`
 	TotalWordsInLevel   int               `json:"total_words_in_level"`
 	TotalDaysActive     int               `json:"total_days_active"`
 	WordsLearnedByLevel map[string]int    `json:"words_learned_by_level"`

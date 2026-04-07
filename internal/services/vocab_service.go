@@ -192,14 +192,16 @@ func (s *VocabService) GetProgress(userID string) (*models.ProgressStats, error)
 	}
 
 	stats := &models.ProgressStats{
-		CurrentVocabIndex: progress.CurrentVocabIndex,
-		CurrentLevel:      user.CurrentLevel,
-		StreakDays:        progress.StreakDays,
-		LastStudyDate:     progress.LastStudyDate,
-		WordsLearned:      progress.WordsLearnedCount,
-		WordsSkipped:      progress.WordsSkippedCount,
-		TotalWordsInLevel: totalWords,
-		TotalDaysActive:   daysActive,
+		CurrentVocabIndex:   progress.CurrentVocabIndex,
+		CurrentGrammarIndex: progress.CurrentGrammarIndex,
+		CurrentLevel:        user.CurrentLevel,
+		StreakDays:          progress.StreakDays,
+		LastStudyDate:       progress.LastStudyDate,
+		WordsLearned:        progress.WordsLearnedCount,
+		WordsSkipped:        progress.WordsSkippedCount,
+		GrammarLearned:      progress.GrammarLearnedCount,
+		TotalWordsInLevel:   totalWords,
+		TotalDaysActive:     daysActive,
 		WordsLearnedByLevel: map[string]int{
 			user.CurrentLevel: progress.WordsLearnedCount,
 		},
