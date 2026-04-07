@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -43,9 +44,14 @@ func (ue *UsageExamples) Scan(value interface{}) error {
 		*ue = []UsageExample{}
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to unmarshal UsageExamples JSONB value")
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal UsageExamples JSONB value: expected []byte or string, got %T", value)
 	}
 	return json.Unmarshal(bytes, ue)
 }
@@ -74,9 +80,14 @@ func (rp *RelatedPatterns) Scan(value interface{}) error {
 		*rp = []RelatedPattern{}
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to unmarshal RelatedPatterns JSONB value")
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal RelatedPatterns JSONB value: expected []byte or string, got %T", value)
 	}
 	return json.Unmarshal(bytes, rp)
 }
