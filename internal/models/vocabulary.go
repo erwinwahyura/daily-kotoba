@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -43,9 +44,14 @@ func (es *ExampleSentences) Scan(value interface{}) error {
 		return nil
 	}
 
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to unmarshal JSONB value")
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal JSONB value: expected []byte or string, got %T", value)
 	}
 
 	return json.Unmarshal(bytes, es)
@@ -93,10 +99,17 @@ func (rw *RelatedWords) Scan(value interface{}) error {
 		*rw = RelatedWords{}
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to unmarshal RelatedWords JSONB value")
+	
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal RelatedWords JSONB value: expected []byte or string, got %T", value)
 	}
+	
 	return json.Unmarshal(bytes, rw)
 }
 
