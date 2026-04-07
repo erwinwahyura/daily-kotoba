@@ -17,13 +17,18 @@ func NewUserRepository(db *db.DB) *UserRepository {
 }
 
 func (r *UserRepository) Create(user *models.User) error {
+	// Generate UUID in application code for SQLite compatibility
+	if user.ID == "" {
+		user.ID = r.db.GenerateUUID()
+	}
+	
 	query := `
-		INSERT INTO users (email, password_hash, current_jlpt_level)
-		VALUES ($1, $2, $3)
-		RETURNING id, created_at, updated_at
+		INSERT INTO users (id, email, password_hash, current_jlpt_level)
+		VALUES (` + r.db.Placeholder(1) + `, ` + r.db.Placeholder(2) + `, ` + r.db.Placeholder(3) + `, ` + r.db.Placeholder(4) + `)
+		RETURNING created_at, updated_at
 	`
-	err := r.db.QueryRow(query, user.Email, user.PasswordHash, user.CurrentLevel).
-		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	err := r.db.QueryRow(query, user.ID, user.Email, user.PasswordHash, user.CurrentLevel).
+		Scan(&user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		return err
@@ -32,7 +37,7 @@ func (r *UserRepository) Create(user *models.User) error {
 	// Create initial user progress
 	progressQuery := `
 		INSERT INTO user_progress (user_id, current_vocab_index)
-		VALUES ($1, 0)
+		VALUES (` + r.db.Placeholder(1) + `, 0)
 	`
 	_, err = r.db.Exec(progressQuery, user.ID)
 	return err
@@ -43,7 +48,7 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	query := `
 		SELECT id, email, password_hash, current_jlpt_level, created_at, updated_at
 		FROM users
-		WHERE email = $1
+		WHERE email = ` + r.db.Placeholder(1) + `
 	`
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID,
@@ -69,7 +74,7 @@ func (r *UserRepository) GetByID(id string) (*models.User, error) {
 	query := `
 		SELECT id, email, password_hash, current_jlpt_level, created_at, updated_at
 		FROM users
-		WHERE id = $1
+		WHERE id = ` + r.db.Placeholder(1) + `
 	`
 	err := r.db.QueryRow(query, id).Scan(
 		&user.ID,
