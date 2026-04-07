@@ -30,14 +30,18 @@ COPY --from=builder /app/kotoba-api .
 # Copy migrations directory
 COPY --from=builder /app/migrations ./migrations
 
+# Copy seeds directory
+COPY --from=builder /app/seeds ./seeds
+
 # Copy environment file
 COPY .env.hetzner .env
 
 # Create data directory for persistent volume
 RUN mkdir -p /data
 
-# Set migrations directory path
+# Set directory paths
 ENV MIGRATIONS_DIR=./migrations
+ENV SEEDS_DIR=./seeds
 
 # Expose the application port
 EXPOSE 8090

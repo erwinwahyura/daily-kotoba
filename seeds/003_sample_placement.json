@@ -1,0 +1,24 @@
+[
+  {
+    "id": "770e8400-e29b-41d4-a716-446655440000",
+    "question_text": "これは＿＿＿ですか。\n(What is this?)",
+    "options": "[{\"id\": \"a\", \"text\": \"何 (なん/なに)\", \"is_correct\": true}, {\"id\": \"b\", \"text\": \"誰 (だれ)\", \"is_correct\": false}, {\"id\": \"c\", \"text\": \"どこ\", \"is_correct\": false}]",
+    "correct_answer": "a",
+    "difficulty_level": 1,
+    "target_jlpt_level": "N5",
+    "hints": "[{\"type\": \"grammar\", \"text\": \"Objects use 何 (what)\"}, {\"type\": \"vocabulary\", \"text\": \"なん is used before です\"}]",
+    "explanation": "For objects/things, use 何 (なん/なに) to ask 'what'. 誰 (だれ) is for people, どこ is for places.",
+    "created_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "770e8400-e29b-41d4-a716-446655440001",
+    "question_text": "私＿＿＿行きます。\n(I will go.)",
+    "options": "[{\"id\": \"a\", \"text\": \"は\", \"is_correct\": false}, {\"id\": \"b\", \"text\": \"が\", \"is_correct\": false}, {\"id\": \"c\", \"text\": \"を\", \"is_correct\": true}]",
+    "correct_answer": "c",
+    "difficulty_level": 2,
+    "target_jlpt_level": "N5",
+    "hints": "[{\"type\": \"particle\", \"text\": \"を marks the direct object\"}]",
+    "explanation": "を (wo/o) marks the direct object of a verb. For movement verbs like 行く, it marks the destination when there's an object of motion.",
+    "created_at": "2026-01-01T00:00:00Z"
+  }
+]

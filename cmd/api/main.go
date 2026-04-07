@@ -68,6 +68,17 @@ func main() {
 	}
 	log.Println("Database migrations completed")
 
+	// Run auto-seeding (idempotent - only inserts data once)
+	seedsDir := os.Getenv("SEEDS_DIR")
+	if seedsDir == "" {
+		seedsDir = "./seeds" // Default to local seeds folder
+	}
+	
+	if err := wrappedDB.RunAutoSeeding(seedsDir); err != nil {
+		log.Fatalf("Failed to run auto-seeding: %v", err)
+	}
+	log.Println("Auto-seeding completed (only applied new seeds)")
+
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(wrappedDB)
 	vocabRepo := repository.NewVocabRepository(wrappedDB)
