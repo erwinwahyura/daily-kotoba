@@ -85,12 +85,14 @@ func main() {
 	progressRepo := repository.NewProgressRepository(wrappedDB)
 	placementRepo := repository.NewPlacementRepository(wrappedDB)
 	grammarRepo := repository.NewGrammarRepository(wrappedDB)
+	srsRepo := repository.NewSRSRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
 	placementService := services.NewPlacementService(placementRepo, userRepo)
 	grammarService := services.NewGrammarService(grammarRepo, progressRepo, userRepo)
+	srsService := services.NewSRSService(srsRepo, vocabRepo, grammarRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -98,6 +100,7 @@ func main() {
 	progressHandler := handlers.NewProgressHandler(vocabService)
 	placementHandler := handlers.NewPlacementHandler(placementService)
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
+	srsHandler := handlers.NewSRShandler(srsService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -172,6 +175,15 @@ func main() {
 				grammar.GET("/:id", grammarHandler.GetPatternByID)
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
+
+			// SRS (Spaced Repetition) routes
+			srs := protected.Group("/srs")
+			{
+				srs.GET("/queue", srsHandler.GetReviewQueue)      // Get items due for review
+				srs.POST("/review", srsHandler.SubmitReview)     // Submit a review
+				srs.GET("/stats", srsHandler.GetSRSStats)        // Get SRS statistics
+				srs.POST("/init", srsHandler.InitializeItem)     // Add new item to SRS
+			}
 		}
 	}
 
