@@ -125,7 +125,17 @@ func (db *DB) SeedVocabulary(seedFile string) (int, error) {
 		for col, val := range record {
 			columns = append(columns, col)
 			placeholders = append(placeholders, db.Placeholder(len(values)+1))
-			values = append(values, val)
+			
+			// Handle JSON fields
+			if col == "example_sentences" || col == "related_words" {
+				jsonVal, err := db.JSONValue(val)
+				if err != nil {
+					return count, fmt.Errorf("failed to marshal JSON for %s: %w", col, err)
+				}
+				values = append(values, jsonVal)
+			} else {
+				values = append(values, val)
+			}
 		}
 
 		query := fmt.Sprintf(
