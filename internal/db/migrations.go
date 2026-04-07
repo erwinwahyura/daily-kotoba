@@ -2,7 +2,6 @@ package db
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
