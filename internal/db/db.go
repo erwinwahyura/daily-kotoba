@@ -27,6 +27,7 @@ func (db *DB) GenerateUUID() string {
 }
 
 // JSONValue converts a value to database-appropriate JSON
+// Handles both raw JSON strings (from seed files) and parsed Go types
 func (db *DB) JSONValue(v interface{}) (interface{}, error) {
 	if v == nil {
 		if db.Driver == "postgres" {
@@ -35,6 +36,22 @@ func (db *DB) JSONValue(v interface{}) (interface{}, error) {
 		return "[]", nil
 	}
 	
+	// If it's already a string, assume it's pre-formatted JSON from seed files
+	// Validate it's valid JSON and return as-is
+	if s, ok := v.(string); ok {
+		var test interface{}
+		if err := json.Unmarshal([]byte(s), &test); err != nil {
+			// Invalid JSON, wrap it in an array
+			return fmt.Sprintf("[%q]", s), nil
+		}
+		// Valid JSON - return as string for SQLite, []byte for Postgres
+		if db.Driver == "postgres" {
+			return []byte(s), nil
+		}
+		return s, nil
+	}
+	
+	// For other types (slices, maps from parsed JSON), marshal them
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
