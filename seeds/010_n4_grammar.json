@@ -1,0 +1,65 @@
+[
+  {
+    "id": "680e8400-e29b-41d4-a716-446655440000",
+    "pattern": "〜て形",
+    "plain_form": "て",
+    "meaning": "te-form (connective)",
+    "detailed_explanation": "The te-form connects verbs in sequence, makes requests, or expresses ongoing states. Essential for N4-level sentence linking.",
+    "conjugation_rules": "Group 1: う→って, く→いて (except 行く→行って), す→して, つ/る→って, む/ぶ/ぬ→んで, ぐ→いで. Group 2: drop る + て. Irregular: する→して, 来る→来て.",
+    "usage_examples": [
+      {"japanese": "朝ご飯を食べて、学校へ行きます", "reading": "あさごはんをたべて、がっこうへいきます", "meaning": "I eat breakfast and go to school", "nuance": "Sequential actions", "context": "Describing morning routine", "alternative": "食べてから (after eating)"},
+      {"japanese": "手を洗ってください", "reading": "てをあらってください", "meaning": "Please wash your hands", "nuance": "Polite request using te-form", "context": "Asking someone politely", "alternative": "洗いなさい (command)"}
+    ],
+    "nuance_notes": "Te-form is the 'glue' of Japanese sentences. Links actions: 食べて寝る (eat then sleep). Makes requests: 〜てください. Permission: 〜てもいいです. Prohibition: 〜てはいけません.",
+    "jlpt_level": "N4",
+    "related_patterns": [
+      {"pattern": "〜てください", "relationship": "request form", "key_difference": "〜て = base; 〜てください = polite request"},
+      {"pattern": "〜てもいい", "relationship": "permission", "key_difference": "〜て + もいい = 'may do X'"}
+    ],
+    "common_mistakes": "行く→行いて (WRONG) → 行って (correct, exception). 話す→話して (not 話して). 死ぬ→死んで (not 死ぬて).",
+    "index_position": 0,
+    "created_at": "2026-04-07T00:00:00Z"
+  },
+  {
+    "id": "680e8400-e29b-41d4-a716-446655440001",
+    "pattern": "〜ない形",
+    "plain_form": "ない",
+    "meaning": "negative form (plain)",
+    "detailed_explanation": "The plain negative form. Used for casual speech, before certain particles, or within complex sentences. N4 requires knowing both polite (ません) and plain (ない) negatives.",
+    "conjugation_rules": "Group 1: う→わない (e.g., 話す→話さない), く→かない, す→さない, つ→たない, ぬ→なない, む→まない, る→らない, う. Group 2: る→ない. Irregular: する→しない, 来る→来ない/こない.",
+    "usage_examples": [
+      {"japanese": "肉を食べない", "reading": "にくをたべない", "meaning": "I don't eat meat", "nuance": "Casual negative statement", "context": "Stating dietary preference casually", "alternative": "食べません (polite)"},
+      {"japanese": "何も知らない", "reading": "なにもしらない", "meaning": "I don't know anything", "nuance": "Plain negative with 何も (nothing)", "context": "Casual conversation", "alternative": "知りません (polite)"}
+    ],
+    "nuance_notes": "ない attaches to the あ-stem (same stem used for potential form). Different from ません which is polite/formal. Use ない with friends, in subordinate clauses, before particles like のに.",
+    "jlpt_level": "N4",
+    "related_patterns": [
+      {"pattern": "〜ません", "relationship": "polite negative", "key_difference": "〜ない = casual/plain; 〜ません = polite/formal"},
+      {"pattern": "〜ずに", "relationship": "without doing", "key_difference": "〜ないで = 'without doing'; 〜ずに = more formal/literary"}
+    ],
+    "common_mistakes": "Group 1 vowel change: う→わ, not just drop. 行く→行かない (not 行くない). ある (exist) → ない (special exception, not あらない).",
+    "index_position": 1,
+    "created_at": "2026-04-07T00:00:00Z"
+  },
+  {
+    "id": "680e8400-e29b-41d4-a716-446655440002",
+    "pattern": "〜た形",
+    "plain_form": "た",
+    "meaning": "past tense (plain)",
+    "detailed_explanation": "The plain past tense. Changes verbs to 'did X' form. Essential N4 pattern for talking about past events in casual speech.",
+    "conjugation_rules": "Same rules as te-form, but with た/だ instead of て/で. Group 1: う→った, く→いた, す→した, つ/る→った, む/ぶ/ぬ→んだ, ぐ→いだ. Group 2: drop る + た. Irregular: する→した, 来る→来た/きた.",
+    "usage_examples": [
+      {"japanese": "昨日映画を見た", "reading": "きのうえいがをみた", "meaning": "I watched a movie yesterday", "nuance": "Casual past statement", "context": "Talking about yesterday", "alternative": "見ました (polite)"},
+      {"japanese": "勉強したけど、難しかった", "reading": "べんきょうしたけど、むずかしかった", "meaning": "I studied but it was difficult", "nuance": "Past + けど (but)", "context": "Explaining past effort", "alternative": "勉強しましたが (polite)"}
+    ],
+    "nuance_notes": "た form narrative past. Use for storytelling, diary entries, casual conversation about past. Same conjugation as te-form (just た instead of て).",
+    "jlpt_level": "N4",
+    "related_patterns": [
+      {"pattern": "〜ました", "relationship": "polite past", "key_difference": "〜た = casual past; 〜ました = polite past"},
+      {"pattern": "〜て形", "relationship": "same conjugation", "key_difference": "Same stem rules, just た/だ ending instead of て/で"}
+    ],
+    "common_mistakes": "Same exceptions as te-form: 行く→行った (not 行いた). Remember: if te-form is 行って, then past is 行った (same pattern with た).",
+    "index_position": 2,
+    "created_at": "2026-04-07T00:00:00Z"
+  }
+]
