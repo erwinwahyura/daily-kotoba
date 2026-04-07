@@ -60,50 +60,90 @@ func (db *DB) MarkMigrationApplied(version string) error {
 }
 
 // LoadMigrationsFromDir reads all migration files from a directory
-func LoadMigrationsFromDir(dir string) ([]Migration, error) {
+// For multi-driver support, it looks for driver-specific files first:
+//   - 000001_name.sqlite.up.sql (SQLite-specific)
+//   - 000001_name.postgres.up.sql (PostgreSQL-specific)
+//   - 000001_name.up.sql (generic/default)
+func LoadMigrationsFromDir(dir string, driver string) ([]Migration, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
-	// Regex to parse filename: 000001_description.up.sql
+	// Pattern to parse: 000001_description.[driver.]up.sql
+	// Driver-specific: 000001_description.sqlite.up.sql
+	// Generic: 000001_description.up.sql
 	pattern := regexp.MustCompile(`^(\d+)_(.+)\.(up|down)\.sql$`)
+	driverPattern := regexp.MustCompile(`^(\d+)_(.+)\.(sqlite|postgres)\.(up|down)\.sql$`)
 
 	migrations := make(map[string]*Migration)
+
+	// First pass: collect driver-specific migrations
+	driverSpecific := make(map[string]map[string]string) // version -> direction -> filename
 
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 		name := file.Name()
-		matches := pattern.FindStringSubmatch(name)
-		if matches == nil {
+
+		// Check for driver-specific first
+		matches := driverPattern.FindStringSubmatch(name)
+		if matches != nil {
+			version := matches[1]
+			fileDriver := matches[3]
+			direction := matches[4]
+
+			if fileDriver == driver {
+				if driverSpecific[version] == nil {
+					driverSpecific[version] = make(map[string]string)
+				}
+				driverSpecific[version][direction] = name
+			}
 			continue
 		}
 
-		version := matches[1]
-		description := matches[2]
-		direction := matches[3]
+		// Check for generic
+		matches = pattern.FindStringSubmatch(name)
+		if matches != nil {
+			version := matches[1]
+			direction := matches[3]
 
-		content, err := os.ReadFile(filepath.Join(dir, name))
-		if err != nil {
-			return nil, fmt.Errorf("failed to read migration %s: %w", name, err)
-		}
-
-		// Clean SQL (remove comments, empty lines for checksum if needed)
-		sql := cleanSQL(string(content))
-
-		if migrations[version] == nil {
-			migrations[version] = &Migration{
-				Version: version,
-				Name:    description,
+			// Only use generic if no driver-specific version exists
+			if _, hasDriver := driverSpecific[version]; !hasDriver {
+				if driverSpecific[version] == nil {
+					driverSpecific[version] = make(map[string]string)
+				}
+				// Only set if not already set (driver-specific takes priority)
+				if _, exists := driverSpecific[version][direction]; !exists {
+					driverSpecific[version][direction] = name
+				}
 			}
 		}
+	}
 
-		if direction == "up" {
-			migrations[version].UpSQL = sql
-		} else {
-			migrations[version].DownSQL = sql
+	// Second pass: load the selected files
+	for version, directions := range driverSpecific {
+		for direction, filename := range directions {
+			content, err := os.ReadFile(filepath.Join(dir, filename))
+			if err != nil {
+				return nil, fmt.Errorf("failed to read migration %s: %w", filename, err)
+			}
+
+			sql := cleanSQL(string(content))
+
+			if migrations[version] == nil {
+				migrations[version] = &Migration{
+					Version: version,
+					Name:    filename, // simplified
+				}
+			}
+
+			if direction == "up" {
+				migrations[version].UpSQL = sql
+			} else {
+				migrations[version].DownSQL = sql
+			}
 		}
 	}
 
@@ -138,8 +178,8 @@ func (db *DB) RunMigrations(migrationsDir string) error {
 		appliedSet[v] = true
 	}
 
-	// Load all migrations
-	migrations, err := LoadMigrationsFromDir(migrationsDir)
+	// Load all migrations (driver-specific)
+	migrations, err := LoadMigrationsFromDir(migrationsDir, db.Driver)
 	if err != nil {
 		return fmt.Errorf("failed to load migrations: %w", err)
 	}
