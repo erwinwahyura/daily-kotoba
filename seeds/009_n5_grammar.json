@@ -1,0 +1,32 @@
+[
+  {
+    "id": "670e8400-e29b-41d4-a716-446655440000",
+    "pattern": "〜です",
+    "plain_form": "です",
+    "meaning": "is/am/are (polite)",
+    "detailed_explanation": "The polite copula. Used to end sentences with nouns and な-adjectives in polite speech.",
+    "conjugation_rules": "Noun/な-adjective + です",
+    "usage_examples": [{"japanese": "私は学生です", "reading": "わたしはがくせいです", "meaning": "I am a student", "nuance": "Simple polite identification", "context": "Introducing yourself", "alternative": "〜だ (casual)"}, {"japanese": "これは本です", "reading": "これはほんです", "meaning": "This is a book", "nuance": "Polite identification of object", "context": "Describing objects politely", "alternative": "これは本だ (casual)"}],
+    "nuance_notes": "です makes speech polite. Use with strangers, teachers, bosses. Friends use だ instead. Past tense: でした. Negative: ではありません/じゃありません.",
+    "jlpt_level": "N5",
+    "related_patterns": [{"pattern": "〜だ", "relationship": "casual equivalent", "key_difference": "〜です = polite; 〜だ = casual (friends/family)"}],
+    "common_mistakes": "Using です with い-adjectives (×美味しいです is actually correct polite form, but 美味しいだ is wrong). Use です after い-adjectives too in polite speech.",
+    "index_position": 0,
+    "created_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "670e8400-e29b-41d4-a716-446655440001",
+    "pattern": "〜ます",
+    "plain_form": "ます",
+    "meaning": "verb ending (polite)",
+    "detailed_explanation": "Polite verb ending. Changes dictionary form verbs to polite/formal speech.",
+    "conjugation_rules": "Verb (stem) + ます",
+    "usage_examples": [{"japanese": "行きます", "reading": "いきます", "meaning": "I go (polite)", "nuance": "Polite statement of action", "context": "Telling someone where you're going", "alternative": "行く (casual)"}, {"japanese": "食べます", "reading": "たべます", "meaning": "I eat (polite)", "nuance": "Polite description of eating", "context": "Ordering food at restaurant", "alternative": "食べる (casual)"}],
+    "nuance_notes": "ます attaches to verb stem. 行く→行きます. 食べる→食べます. Past: ました. Negative: ません. Makes verbs polite/formal.",
+    "jlpt_level": "N5",
+    "related_patterns": [{"pattern": "〜る/う (dictionary form)", "relationship": "casual equivalent", "key_difference": "〜ます = polite; dictionary form = casual"}],
+    "common_mistakes": "Wrong stem: 話す→話します (correct, not 話すます). Group 1 verbs change: 行く→行きます, 読む→読みます. Group 2: drop る only: 食べる→食べます.",
+    "index_position": 1,
+    "created_at": "2026-01-01T00:00:00Z"
+  }
+]
