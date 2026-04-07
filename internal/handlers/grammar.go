@@ -76,3 +76,34 @@ func (h *GrammarHandler) GetPatternsByLevel(c *gin.Context) {
 
 	utils.SendSuccess(c, 200, "Grammar patterns retrieved successfully", response)
 }
+
+// SkipPattern advances to the next grammar pattern
+func (h *GrammarHandler) SkipPattern(c *gin.Context) {
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		utils.SendError(c, 401, "User not authenticated", nil)
+		return
+	}
+
+	patternID := c.Param("id")
+	if patternID == "" {
+		utils.SendError(c, 400, "Pattern ID is required", nil)
+		return
+	}
+
+	var req struct {
+		Status string `json:"status" binding:"required,oneof=studied skipped"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body", err)
+		return
+	}
+
+	nextPattern, err := h.grammarService.SkipToNextPattern(userID, patternID, req.Status)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to skip to next pattern", err)
+		return
+	}
+
+	utils.SendSuccess(c, 200, "Moved to next pattern successfully", nextPattern)
+}

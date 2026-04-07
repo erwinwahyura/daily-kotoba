@@ -89,3 +89,47 @@ func (s *GrammarService) GetPatternsByLevel(level string, page, limit int) (*mod
 func (s *GrammarService) BulkCreatePatterns(patterns []models.GrammarPattern) error {
 	return s.grammarRepo.BulkCreate(patterns)
 }
+
+func (s *GrammarService) SkipToNextPattern(userID, patternID, status string) (*models.GrammarPatternResponse, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mark current pattern status (placeholder for future tracking)
+	_ = patternID
+	_ = status
+
+	// Increment grammar index
+	progress, err := s.progressRepo.IncrementGrammarIndex(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPatterns, err := s.grammarRepo.GetTotalCountByLevel(user.CurrentLevel)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we've reached the end
+	if progress.CurrentGrammarIndex >= totalPatterns {
+		progress.CurrentGrammarIndex = 0
+		if err := s.progressRepo.Update(progress); err != nil {
+			return nil, err
+		}
+	}
+
+	nextPattern, err := s.grammarRepo.GetByLevelAndIndex(user.CurrentLevel, progress.CurrentGrammarIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GrammarPatternResponse{
+		Pattern: nextPattern,
+		Progress: &models.GrammarProgress{
+			CurrentIndex:    progress.CurrentGrammarIndex,
+			TotalPatterns:   totalPatterns,
+			PatternsLearned: progress.GrammarLearnedCount,
+		},
+	}, nil
+}

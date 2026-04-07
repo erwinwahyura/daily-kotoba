@@ -173,6 +173,7 @@ func main() {
 			{
 				grammar.GET("/daily", grammarHandler.GetDailyPattern)
 				grammar.GET("/:id", grammarHandler.GetPatternByID)
+			grammar.POST("/:id/skip", grammarHandler.SkipPattern)
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
 
