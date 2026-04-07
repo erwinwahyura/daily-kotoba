@@ -6,7 +6,7 @@
     "meaning": "cannot afford to; must not",
     "detailed_explanation": "Used when expressing that something cannot be done due to circumstances, obligations, or moral constraints. Stronger than just saying 〜ない.",
     "conjugation_rules": "Verb (dictionary form) + わけにはいかない",
-    "usage_examples": [{\"japanese\": \"仕事があるから、遊びに行くわけにはいかない\", \"reading\": \"しごとがあるから、あそびにいくわけにはいかない\", \"meaning\": \"I have work, so I cannot afford to go out and play\", \"nuance\": \"Expresses obligation preventing action\", \"context\": \"Telling friends you can't hang out\", \"alternative\": \"〜なければならない\"}], "nuance_notes": "This pattern implies external circumstances make an action impossible. It's often used for moral obligations or unavoidable situations.",
+    "usage_examples": [{"japanese": "仕事があるから、遊びに行くわけにはいかない", "reading": "しごとがあるから、あそびにいくわけにはいかない", "meaning": "I have work, so I cannot afford to go out and play", "nuance": "Expresses obligation preventing action", "context": "Telling friends you can't hang out", "alternative": "〜なければならない"}], "nuance_notes": "This pattern implies external circumstances make an action impossible. It's often used for moral obligations or unavoidable situations.",
     "jlpt_level": "N3",
     "index_position": 0,
     "created_at": "2026-01-01T00:00:00Z"
@@ -18,7 +18,7 @@
     "meaning": "should; ought to; express emotion",
     "detailed_explanation": "Used to express emotional response, general truths, or soft advice/suggestions.",
     "conjugation_rules": "Verb (plain past/present) + ものだ / もんだ (casual)",
-    "usage_examples": [{\"japanese\": \"時間が経つのは早いものだ\", \"reading\": \"じかんがたつのははやいものだ\", \"meaning\": \"Time really does fly (emotional reflection)\", \"nuance\": \"Expresses sentiment about universal truth\", \"context\": \"Reminiscing with an old friend\", \"alternative\": \"〜ね (less emotional)\"}], "nuance_notes": "Contrast with 〜べきだ (stronger obligation) and 〜わけだ (explanation). ものだ is softer, more reflective.",
+    "usage_examples": [{"japanese": "時間が経つのは早いものだ", "reading": "じかんがたつのははやいものだ", "meaning": "Time really does fly (emotional reflection)", "nuance": "Expresses sentiment about universal truth", "context": "Reminiscing with an old friend", "alternative": "〜ね (less emotional)"}], "nuance_notes": "Contrast with 〜べきだ (stronger obligation) and 〜わけだ (explanation). ものだ is softer, more reflective.",
     "jlpt_level": "N3",
     "index_position": 1,
     "created_at": "2026-01-01T00:00:00Z"
