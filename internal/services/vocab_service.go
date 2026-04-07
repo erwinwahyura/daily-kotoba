@@ -87,8 +87,12 @@ func (s *VocabService) SkipToNextWord(userID, vocabID, status string) (*models.V
 		return nil, err
 	}
 
-	// Increment appropriate counter
-	if status == "known" || status == "skipped" {
+	// Increment appropriate counter based on status
+	if status == "known" {
+		if err := s.progressRepo.IncrementWordsLearned(userID); err != nil {
+			return nil, err
+		}
+	} else if status == "skipped" {
 		if err := s.progressRepo.IncrementWordsSkipped(userID); err != nil {
 			return nil, err
 		}
@@ -107,11 +111,21 @@ func (s *VocabService) SkipToNextWord(userID, vocabID, status string) (*models.V
 	}
 
 	// Check if we've reached the end of the level
-	// If yes, cycle back to 0 (Phase 1 logic)
+	// If yes, advance to next JLPT level (N5 → N4 → N3 → N2 → N1)
 	if progress.CurrentVocabIndex >= totalWords {
-		progress.CurrentVocabIndex = 0
-		if err := s.progressRepo.Update(progress); err != nil {
-			return nil, err
+		nextLevel := getNextLevel(user.CurrentLevel)
+		if nextLevel != user.CurrentLevel {
+			// Advance to next level
+			if err := s.userRepo.UpdateUserLevel(userID, nextLevel); err != nil {
+				return nil, err
+			}
+			// Reset index for new level
+			progress.CurrentVocabIndex = 0
+			if err := s.progressRepo.Update(progress); err != nil {
+				return nil, err
+			}
+			// Update user object for response
+			user.CurrentLevel = nextLevel
 		}
 	}
 
@@ -262,4 +276,16 @@ func (s *VocabService) getTotalWordsForLevel(level string) int {
 // BulkCreateVocabulary is a helper for seeding data
 func (s *VocabService) BulkCreateVocabulary(vocabList []models.Vocabulary) error {
 	return s.vocabRepo.BulkCreate(vocabList)
+}
+
+// getNextLevel returns the next JLPT level after completing current
+func getNextLevel(current string) string {
+	levels := []string{"N5", "N4", "N3", "N2", "N1"}
+	for i, level := range levels {
+		if level == current && i < len(levels)-1 {
+			return levels[i+1]
+		}
+	}
+	// Already at N1 or unknown level, stay put
+	return current
 }
