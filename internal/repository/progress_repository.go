@@ -20,19 +20,23 @@ func NewProgressRepository(db *db.DB) *ProgressRepository {
 func (r *ProgressRepository) GetByUserID(userID string) (*models.UserProgress, error) {
 	progress := &models.UserProgress{}
 	query := `
-		SELECT user_id, current_vocab_index, last_word_id, streak_days,
-		       last_study_date, words_learned_count, words_skipped_count, updated_at
+		SELECT user_id, current_vocab_index, current_grammar_index, last_word_id, last_grammar_id,
+		       streak_days, last_study_date, words_learned_count, words_skipped_count,
+		       grammar_learned_count, updated_at
 		FROM user_progress
 		WHERE user_id = $1
 	`
 	err := r.db.QueryRow(query, userID).Scan(
 		&progress.UserID,
 		&progress.CurrentVocabIndex,
+		&progress.CurrentGrammarIndex,
 		&progress.LastWordID,
+		&progress.LastGrammarID,
 		&progress.StreakDays,
 		&progress.LastStudyDate,
 		&progress.WordsLearnedCount,
 		&progress.WordsSkippedCount,
+		&progress.GrammarLearnedCount,
 		&progress.UpdatedAt,
 	)
 
@@ -50,22 +54,28 @@ func (r *ProgressRepository) Update(progress *models.UserProgress) error {
 	query := `
 		UPDATE user_progress
 		SET current_vocab_index = $1,
-		    last_word_id = $2,
-		    streak_days = $3,
-		    last_study_date = $4,
-		    words_learned_count = $5,
-		    words_skipped_count = $6,
+		    current_grammar_index = $2,
+		    last_word_id = $3,
+		    last_grammar_id = $4,
+		    streak_days = $5,
+		    last_study_date = $6,
+		    words_learned_count = $7,
+		    words_skipped_count = $8,
+		    grammar_learned_count = $9,
 		    updated_at = CURRENT_TIMESTAMP
-		WHERE user_id = $7
+		WHERE user_id = $10
 	`
 	_, err := r.db.Exec(
 		query,
 		progress.CurrentVocabIndex,
+		progress.CurrentGrammarIndex,
 		progress.LastWordID,
+		progress.LastGrammarID,
 		progress.StreakDays,
 		progress.LastStudyDate,
 		progress.WordsLearnedCount,
 		progress.WordsSkippedCount,
+		progress.GrammarLearnedCount,
 		progress.UserID,
 	)
 	return err
