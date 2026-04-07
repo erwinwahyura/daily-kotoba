@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -309,6 +310,8 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	}
 	sort.Strings(seedFiles)
 
+	log.Printf("Found %d seed files: %v", len(seedFiles), seedFiles)
+
 	// Apply each seed file
 	for _, name := range seedFiles {
 		path := filepath.Join(seedsDir, name)
@@ -317,8 +320,11 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 		seedName := strings.TrimSuffix(name, ".json")
 		applied, _ := db.IsSeedApplied(seedName)
 		if applied {
+			log.Printf("Seed %s already applied, skipping", seedName)
 			continue
 		}
+
+		log.Printf("Applying seed: %s", seedName)
 
 		var count int
 		var err error
@@ -332,17 +338,16 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedPlacement(path)
 		} else {
 			// Unknown type, try generic approach
+			log.Printf("Unknown seed type for %s, skipping", name)
 			continue
 		}
 
 		if err != nil {
+			log.Printf("Failed to apply seed %s: %v", name, err)
 			return fmt.Errorf("failed to apply seed %s: %w", name, err)
 		}
 
-		if count > 0 {
-			// Log success (real logging in production)
-			_ = count
-		}
+		log.Printf("Successfully applied seed %s: %d records inserted", seedName, count)
 	}
 
 	return nil
