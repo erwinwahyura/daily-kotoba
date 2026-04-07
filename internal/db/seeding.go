@@ -68,15 +68,40 @@ type SeedData struct {
 }
 
 // LoadSeedJSON loads seed data from a JSON file
+// Uses json.RawMessage to preserve JSON fields as strings for proper database insertion
 func LoadSeedJSON(path string) (*SeedData, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read seed file %s: %w", path, err)
 	}
 
-	var records []map[string]interface{}
-	if err := json.Unmarshal(data, &records); err != nil {
+	// First, parse into raw messages to preserve JSON structure
+	var rawRecords []map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawRecords); err != nil {
 		return nil, fmt.Errorf("failed to parse seed JSON %s: %w", path, err)
+	}
+
+	// Convert to map[string]interface{} with JSON fields as strings
+	records := make([]map[string]interface{}, len(rawRecords))
+	for i, rawRecord := range rawRecords {
+		record := make(map[string]interface{})
+		for key, rawValue := range rawRecord {
+			// Check if this is a JSON array/object (starts with [ or {)
+			trimmed := strings.TrimSpace(string(rawValue))
+			if len(trimmed) > 0 && (trimmed[0] == '[' || trimmed[0] == '{') {
+				// Keep as string for JSON fields
+				record[key] = string(rawValue)
+			} else {
+				// Parse as regular value
+				var value interface{}
+				if err := json.Unmarshal(rawValue, &value); err != nil {
+					record[key] = string(rawValue) // Fallback to string
+				} else {
+					record[key] = value
+				}
+			}
+		}
+		records[i] = record
 	}
 
 	// Extract seed name from filename
@@ -316,13 +341,12 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	for _, name := range seedFiles {
 		path := filepath.Join(seedsDir, name)
 		
-		// Skip already applied seeds (double-check) - TEMPORARILY DISABLED FOR DEBUG
+		// Skip already applied seeds (double-check)
 		seedName := strings.TrimSuffix(name, ".json")
 		applied, _ := db.IsSeedApplied(seedName)
 		if applied {
-			log.Printf("Seed %s was applied before, but re-applying for fresh data", seedName)
-			// Delete old records for this seed type to re-apply fresh
-			db.clearSeedData(seedName)
+			log.Printf("Seed %s already applied, skipping", seedName)
+			continue
 		}
 
 		log.Printf("Applying seed: %s", seedName)
@@ -352,27 +376,6 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	}
 
 	return nil
-}
-
-// clearSeedData removes existing data for a seed to allow re-seeding
-func (db *DB) clearSeedData(seedName string) {
-	// Determine table from seed name
-	table := ""
-	if strings.Contains(seedName, "vocab") {
-		table = "vocabulary"
-	} else if strings.Contains(seedName, "grammar") {
-		table = "grammar_patterns"
-	} else if strings.Contains(seedName, "placement") {
-		table = "placement_questions"
-	}
-	
-	if table != "" {
-		// Delete all records from the table
-		db.Exec("DELETE FROM " + table)
-		// Remove the seed tracking entry
-		db.Exec("DELETE FROM schema_seeds WHERE name = ?", seedName)
-		log.Printf("Cleared existing data for %s from %s", seedName, table)
-	}
 }
 
 // isDuplicateError checks if error is a duplicate/unique constraint violation
