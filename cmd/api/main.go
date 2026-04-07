@@ -57,6 +57,17 @@ func main() {
 		log.Println("SQLite initialized with WAL mode")
 	}
 
+	// Run database migrations (idempotent - only applies pending migrations)
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "./migrations" // Default to local migrations folder
+	}
+	
+	if err := wrappedDB.RunMigrations(migrationsDir); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+	log.Println("Database migrations completed")
+
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(wrappedDB)
 	vocabRepo := repository.NewVocabRepository(wrappedDB)

@@ -27,11 +27,17 @@ WORKDIR /root/
 # Copy the binary from builder
 COPY --from=builder /app/kotoba-api .
 
+# Copy migrations directory
+COPY --from=builder /app/migrations ./migrations
+
 # Copy environment file
 COPY .env.hetzner .env
 
 # Create data directory for persistent volume
 RUN mkdir -p /data
+
+# Set migrations directory path
+ENV MIGRATIONS_DIR=./migrations
 
 # Expose the application port
 EXPOSE 8090
