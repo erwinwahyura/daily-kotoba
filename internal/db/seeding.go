@@ -316,12 +316,13 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	for _, name := range seedFiles {
 		path := filepath.Join(seedsDir, name)
 		
-		// Skip already applied seeds (double-check)
+		// Skip already applied seeds (double-check) - TEMPORARILY DISABLED FOR DEBUG
 		seedName := strings.TrimSuffix(name, ".json")
 		applied, _ := db.IsSeedApplied(seedName)
 		if applied {
-			log.Printf("Seed %s already applied, skipping", seedName)
-			continue
+			log.Printf("Seed %s was applied before, but re-applying for fresh data", seedName)
+			// Delete old records for this seed type to re-apply fresh
+			db.clearSeedData(seedName)
 		}
 
 		log.Printf("Applying seed: %s", seedName)
@@ -351,6 +352,27 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	}
 
 	return nil
+}
+
+// clearSeedData removes existing data for a seed to allow re-seeding
+func (db *DB) clearSeedData(seedName string) {
+	// Determine table from seed name
+	table := ""
+	if strings.Contains(seedName, "vocab") {
+		table = "vocabulary"
+	} else if strings.Contains(seedName, "grammar") {
+		table = "grammar_patterns"
+	} else if strings.Contains(seedName, "placement") {
+		table = "placement_questions"
+	}
+	
+	if table != "" {
+		// Delete all records from the table
+		db.Exec("DELETE FROM " + table)
+		// Remove the seed tracking entry
+		db.Exec("DELETE FROM schema_seeds WHERE name = ?", seedName)
+		log.Printf("Cleared existing data for %s from %s", seedName, table)
+	}
 }
 
 // isDuplicateError checks if error is a duplicate/unique constraint violation
