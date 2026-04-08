@@ -87,6 +87,7 @@ func main() {
 	grammarRepo := repository.NewGrammarRepository(wrappedDB)
 	srsRepo := repository.NewSRSRepository(wrappedDB)
 	conjRepo := repository.NewConjugationRepository(wrappedDB)
+	ttsRepo := repository.NewTTSRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -95,9 +96,11 @@ func main() {
 	grammarService := services.NewGrammarService(grammarRepo, progressRepo, userRepo)
 	srsService := services.NewSRSService(srsRepo, vocabRepo, grammarRepo, userRepo)
 	conjService := services.NewConjugationService(conjRepo)
+	ttsService := services.NewTTSService(ttsRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	ttsHandler := handlers.NewTTSHandler(ttsService)
 	vocabHandler := handlers.NewVocabularyHandler(vocabService)
 	progressHandler := handlers.NewProgressHandler(vocabService)
 	placementHandler := handlers.NewPlacementHandler(placementService)
@@ -198,6 +201,16 @@ func main() {
 				conjugation.POST("/answer", conjHandler.SubmitAnswer)    // Submit answer
 				conjugation.GET("/progress", conjHandler.GetProgress)    // Get progress stats
 			}
+
+			// TTS (Text-to-Speech) routes
+			tts := protected.Group("/tts")
+			{
+				tts.POST("/generate", ttsHandler.GenerateTTS)        // Generate audio
+				tts.GET("/voices", ttsHandler.GetVoices)             // Get available voices
+				tts.GET("/stats", ttsHandler.GetCacheStats)           // Get cache statistics
+			}
+			// Public audio file serving (no auth needed for playback)
+			v1.GET("/tts/audio/:id", ttsHandler.GetAudio)
 		}
 	}
 
