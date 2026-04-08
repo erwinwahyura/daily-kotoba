@@ -86,6 +86,7 @@ func main() {
 	placementRepo := repository.NewPlacementRepository(wrappedDB)
 	grammarRepo := repository.NewGrammarRepository(wrappedDB)
 	srsRepo := repository.NewSRSRepository(wrappedDB)
+	conjRepo := repository.NewConjugationRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -93,6 +94,7 @@ func main() {
 	placementService := services.NewPlacementService(placementRepo, userRepo)
 	grammarService := services.NewGrammarService(grammarRepo, progressRepo, userRepo)
 	srsService := services.NewSRSService(srsRepo, vocabRepo, grammarRepo, userRepo)
+	conjService := services.NewConjugationService(conjRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -101,6 +103,7 @@ func main() {
 	placementHandler := handlers.NewPlacementHandler(placementService)
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 	srsHandler := handlers.NewSRShandler(srsService)
+	conjHandler := handlers.NewConjugationHandler(conjService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -184,6 +187,14 @@ func main() {
 				srs.POST("/review", srsHandler.SubmitReview)     // Submit a review
 				srs.GET("/stats", srsHandler.GetSRSStats)        // Get SRS statistics
 				srs.POST("/init", srsHandler.InitializeItem)     // Add new item to SRS
+			}
+
+			// Conjugation Drill routes
+			conjugation := protected.Group("/conjugation")
+			{
+				conjugation.GET("/start", conjHandler.StartSession)     // Start drill session
+				conjugation.POST("/answer", conjHandler.SubmitAnswer)    // Submit answer
+				conjugation.GET("/progress", conjHandler.GetProgress)    // Get progress stats
 			}
 		}
 	}

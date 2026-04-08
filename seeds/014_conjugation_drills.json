@@ -1,0 +1,61 @@
+[
+  {"id": "conj-001", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "te", "target_ending": "て", "full_answer": "食べて", "hint": "Group 2: Drop る + て", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-002", "base_form": "見る", "reading": "みる", "group": "ichidan", "target_form": "te", "target_ending": "て", "full_answer": "見て", "hint": "Group 2: Drop る + て", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-003", "base_form": "起きる", "reading": "おきる", "group": "ichidan", "target_form": "te", "target_ending": "て", "full_answer": "起きて", "hint": "Group 2: Drop る + て", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-004", "base_form": "寝る", "reading": "ねる", "group": "ichidan", "target_form": "te", "target_ending": "て", "full_answer": "寝て", "hint": "Group 2: Drop る + て", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-005", "base_form": "着る", "reading": "きる", "group": "ichidan", "target_form": "te", "target_ending": "て", "full_answer": "着て", "hint": "Group 2: Drop る + て", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  
+  {"id": "conj-006", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "te", "target_ending": "って", "full_answer": "行って", "hint": "EXCEPTION: 行く→行って (not 行いて)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-007", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "te", "target_ending": "して", "full_answer": "話して", "hint": "Group 1: す→して", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-008", "base_form": "待つ", "reading": "まつ", "group": "godan", "target_form": "te", "target_ending": "って", "full_answer": "待って", "hint": "Group 1: つ→って", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-009", "base_form": "死ぬ", "reading": "しぬ", "group": "godan", "target_form": "te", "target_ending": "んで", "full_answer": "死んで", "hint": "Group 1: ぬ→んで", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-010", "base_form": "読む", "reading": "よむ", "group": "godan", "target_form": "te", "target_ending": "んで", "full_answer": "読んで", "hint": "Group 1: む→んで", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-011", "base_form": "遊ぶ", "reading": "あそぶ", "group": "godan", "target_form": "te", "target_ending": "んで", "full_answer": "遊んで", "hint": "Group 1: ぶ→んで", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-012", "base_form": "泳ぐ", "reading": "およぐ", "group": "godan", "target_form": "te", "target_ending": "いで", "full_answer": "泳いで", "hint": "Group 1: ぐ→いで", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-013", "base_form": "買う", "reading": "かう", "group": "godan", "target_form": "te", "target_ending": "って", "full_answer": "買って", "hint": "Group 1: う→って", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-014", "base_form": "持つ", "reading": "もつ", "group": "godan", "target_form": "te", "target_ending": "って", "full_answer": "持って", "hint": "Group 1: つ→って", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-015", "base_form": "歌う", "reading": "うたう", "group": "godan", "target_form": "te", "target_ending": "って", "full_answer": "歌って", "hint": "Group 1: う→って", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  
+  {"id": "conj-016", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "nai", "target_ending": "ない", "full_answer": "食べない", "hint": "Group 2: Drop る + ない", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-017", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "nai", "target_ending": "かない", "full_answer": "行かない", "hint": "Group 1: く→かない (あ-stem)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-018", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "nai", "target_ending": "さない", "full_answer": "話さない", "hint": "Group 1: す→さない (あ-stem)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-019", "base_form": "読む", "reading": "よむ", "group": "godan", "target_form": "nai", "target_ending": "まない", "full_answer": "読まない", "hint": "Group 1: む→まない (あ-stem)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-020", "base_form": "来る", "reading": "くる", "group": "irregular", "target_form": "nai", "target_ending": "こない", "full_answer": "来ない", "hint": "IRREGULAR: 来る→来ない (こない)", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  {"id": "conj-021", "base_form": "する", "reading": "する", "group": "irregular", "target_form": "nai", "target_ending": "しない", "full_answer": "しない", "hint": "IRREGULAR: する→しない", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  
+  {"id": "conj-022", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "ta", "target_ending": "た", "full_answer": "食べた", "hint": "Group 2: Drop る + た", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-023", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "ta", "target_ending": "った", "full_answer": "行った", "hint": "EXCEPTION: 行く→行った (not 行いた)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-024", "base_form": "読む", "reading": "よむ", "group": "godan", "target_form": "ta", "target_ending": "んだ", "full_answer": "読んだ", "hint": "Group 1: む→んだ (same as te-form)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-025", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "ta", "target_ending": "した", "full_answer": "話した", "hint": "Group 1: す→した (same as te-form)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  
+  {"id": "conj-026", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "polite", "target_ending": "ます", "full_answer": "食べます", "hint": "Group 2: Drop る + ます", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  {"id": "conj-027", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "polite", "target_ending": "きます", "full_answer": "行きます", "hint": "Group 1: く→きます (i-stem)", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  {"id": "conj-028", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "polite", "target_ending": "します", "full_answer": "話します", "hint": "Group 1: す→します (i-stem)", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  {"id": "conj-029", "base_form": "遊ぶ", "reading": "あそぶ", "group": "godan", "target_form": "polite", "target_ending": "びます", "full_answer": "遊びます", "hint": "Group 1: ぶ→びます (i-stem)", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  {"id": "conj-030", "base_form": "読む", "reading": "よむ", "group": "godan", "target_form": "polite", "target_ending": "みます", "full_answer": "読みます", "hint": "Group 1: む→みます (i-stem)", "difficulty": "N5", "jlpt_level": "N5", "category": "verb"},
+  
+  {"id": "conj-031", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "potential", "target_ending": "られる", "full_answer": "食べられる", "hint": "Group 2: Drop る + られる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-032", "base_form": "見る", "reading": "みる", "group": "ichidan", "target_form": "potential", "target_ending": "られる", "full_answer": "見られる", "hint": "Group 2: Drop る + られる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-033", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "potential", "target_ending": "ける", "full_answer": "行ける", "hint": "Group 1: Drop く + け + る (e-stem)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-034", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "potential", "target_ending": "せる", "full_answer": "話せる", "hint": "Group 1: Drop す + せ + る (e-stem)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-035", "base_form": "読む", "reading": "よむ", "group": "godan", "target_form": "potential", "target_ending": "める", "full_answer": "読める", "hint": "Group 1: Drop む + め + る (e-stem)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-036", "base_form": "する", "reading": "する", "group": "irregular", "target_form": "potential", "target_ending": "できる", "full_answer": "できる", "hint": "IRREGULAR: する→できる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-037", "base_form": "来る", "reading": "くる", "group": "irregular", "target_form": "potential", "target_ending": "こられる", "full_answer": "来られる", "hint": "IRREGULAR: 来る→来られる (こられる)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  
+  {"id": "conj-038", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "passive", "target_ending": "られる", "full_answer": "食べられる", "hint": "Group 2: Drop る + られる (same as potential!)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-039", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "passive", "target_ending": "かれる", "full_answer": "行かれる", "hint": "Group 1: あ-stem + れる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-040", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "passive", "target_ending": "される", "full_answer": "話される", "hint": "Group 1: あ-stem + れる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-041", "base_form": "する", "reading": "する", "group": "irregular", "target_form": "passive", "target_ending": "される", "full_answer": "される", "hint": "IRREGULAR: する→される", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-042", "base_form": "来る", "reading": "くる", "group": "irregular", "target_form": "passive", "target_ending": "こられる", "full_answer": "来られる", "hint": "IRREGULAR: 来る→来られる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  
+  {"id": "conj-043", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "causative", "target_ending": "させる", "full_answer": "食べさせる", "hint": "Group 2: Drop る + させる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-044", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "causative", "target_ending": "かせる", "full_answer": "行かせる", "hint": "Group 1: あ-stem + せる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-045", "base_form": "する", "reading": "する", "group": "irregular", "target_form": "causative", "target_ending": "させる", "full_answer": "させる", "hint": "IRREGULAR: する→させる", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  {"id": "conj-046", "base_form": "来る", "reading": "くる", "group": "irregular", "target_form": "causative", "target_ending": "こさせる", "full_answer": "来させる", "hint": "IRREGULAR: 来る→来させる (こさせる)", "difficulty": "N3", "jlpt_level": "N3", "category": "verb"},
+  
+  {"id": "conj-047", "base_form": "食べる", "reading": "たべる", "group": "ichidan", "target_form": "volitional", "target_ending": "よう", "full_answer": "食べよう", "hint": "Group 2: Drop る + よう", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-048", "base_form": "行く", "reading": "いく", "group": "godan", "target_form": "volitional", "target_ending": "こう", "full_answer": "行こう", "hint": "Group 1: く→こう (o-stem)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-049", "base_form": "話す", "reading": "はなす", "group": "godan", "target_form": "volitional", "target_ending": "そう", "full_answer": "話そう", "hint": "Group 1: す→そう (o-stem)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-050", "base_form": "する", "reading": "する", "group": "irregular", "target_form": "volitional", "target_ending": "しよう", "full_answer": "しよう", "hint": "IRREGULAR: する→しよう", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"},
+  {"id": "conj-051", "base_form": "来る", "reading": "くる", "group": "irregular", "target_form": "volitional", "target_ending": "こよう", "full_answer": "来よう", "hint": "IRREGULAR: 来る→来よう (こよう)", "difficulty": "N4", "jlpt_level": "N4", "category": "verb"}
+]
