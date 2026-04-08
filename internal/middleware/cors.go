@@ -1,35 +1,34 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
 // CORSMiddleware handles cross-origin requests
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Allow specific origins
-		allowedOrigins := []string{
-			"https://erwinwahyura.github.io",
-			"https://kotoba-web.erwinwahyura.workers.dev",
-			"https://sensei.erwarx.com",
-			"http://localhost:3000",
-			"http://localhost:8080",
-			"http://localhost:5173", // Vite dev server
-		}
-
 		origin := c.GetHeader("Origin")
 		
-		// Check if origin is allowed
-		for _, allowed := range allowedOrigins {
-			if origin == allowed {
-				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-				break
+		// Check if origin should be allowed (erwarx.com subdomains + specific origins)
+		allowOrigin := false
+		if strings.HasSuffix(origin, ".erwarx.com") || origin == "https://erwarx.com" {
+			allowOrigin = true
+		} else {
+			switch origin {
+			case "https://erwinwahyura.github.io",
+				"https://kotoba-web.erwinwahyura.workers.dev",
+				"http://localhost:3000",
+				"http://localhost:8080",
+				"http://localhost:5173":
+				allowOrigin = true
 			}
 		}
-
-		// Default to wildcard if no specific origin matched (for public health checks)
-		if c.Writer.Header().Get("Access-Control-Allow-Origin") == "" && origin == "" {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		
+		if allowOrigin {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Vary", "Origin")
 		}
 
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
