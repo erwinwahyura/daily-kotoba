@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -119,6 +120,21 @@ func (db *DB) Placeholders(count int) []string {
 		result[i] = db.Placeholder(i + 1)
 	}
 	return result
+}
+
+// EscapeIdentifier returns properly quoted identifier for reserved keywords
+func (db *DB) EscapeIdentifier(name string) string {
+	// SQL reserved keywords that need quoting
+	reserved := map[string]bool{
+		"group": true, "order": true, "select": true, "from": true,
+		"where": true, "insert": true, "update": true, "delete": true,
+		"create": true, "drop": true, "table": true, "index": true,
+	}
+	
+	if reserved[strings.ToLower(name)] {
+		return fmt.Sprintf(`"%s"`, name)
+	}
+	return name
 }
 
 // AutoIncrement returns the auto-increment keyword

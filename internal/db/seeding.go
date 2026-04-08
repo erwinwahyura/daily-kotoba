@@ -404,7 +404,9 @@ func (db *DB) SeedConjugation(seedFile string) (int, error) {
 		values := make([]interface{}, 0)
 
 		for col, val := range record {
-			columns = append(columns, col)
+			// Escape reserved keywords
+			escapedCol := db.EscapeIdentifier(col)
+			columns = append(columns, escapedCol)
 			placeholders = append(placeholders, db.Placeholder(len(values)+1))
 			values = append(values, val)
 		}
