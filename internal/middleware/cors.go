@@ -21,12 +21,13 @@ func CORSMiddleware() gin.HandlerFunc {
 				"https://kotoba-web.erwinwahyura.workers.dev",
 				"http://localhost:3000",
 				"http://localhost:8080",
-				"http://localhost:5173":
+				"http://localhost:5173",
+				"": // Empty origin (health checks, etc.)
 				allowOrigin = true
 			}
 		}
 		
-		if allowOrigin {
+		if allowOrigin && origin != "" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Vary", "Origin")
 		}
