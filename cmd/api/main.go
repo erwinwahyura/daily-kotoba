@@ -176,7 +176,9 @@ func main() {
 			{
 				grammar.GET("/daily", grammarHandler.GetDailyPattern)
 				grammar.GET("/:id", grammarHandler.GetPatternByID)
-			grammar.POST("/:id/skip", grammarHandler.SkipPattern)
+				grammar.POST("/:id/skip", grammarHandler.SkipPattern)
+				grammar.GET("/compare/pairs", grammarHandler.GetComparisonPairs)   // Get comparison pairs
+				grammar.GET("/compare/detail", grammarHandler.ComparePatterns)        // Compare specific patterns
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
 

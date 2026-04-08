@@ -107,3 +107,43 @@ func (h *GrammarHandler) SkipPattern(c *gin.Context) {
 
 	utils.SendSuccess(c, 200, "Moved to next pattern successfully", nextPattern)
 }
+
+// GetComparisonPairs returns grammar patterns grouped for side-by-side comparison
+func (h *GrammarHandler) GetComparisonPairs(c *gin.Context) {
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		utils.SendError(c, 401, "User not authenticated", nil)
+		return
+	}
+
+	level := c.DefaultQuery("level", "N4")
+	pairs, err := h.grammarService.GetComparisonPairs(userID, level)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to get comparison pairs", err)
+		return
+	}
+
+	utils.SendSuccess(c, 200, "Comparison pairs retrieved successfully", gin.H{
+		"pairs": pairs,
+		"level": level,
+	})
+}
+
+// ComparePatterns returns detailed comparison between two specific patterns
+func (h *GrammarHandler) ComparePatterns(c *gin.Context) {
+	patternA := c.Query("a")
+	patternB := c.Query("b")
+
+	if patternA == "" || patternB == "" {
+		utils.SendError(c, 400, "Both pattern IDs required (query params: a, b)", nil)
+		return
+	}
+
+	comparison, err := h.grammarService.ComparePatterns(patternA, patternB)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to compare patterns", err)
+		return
+	}
+
+	utils.SendSuccess(c, 200, "Comparison retrieved successfully", comparison)
+}
