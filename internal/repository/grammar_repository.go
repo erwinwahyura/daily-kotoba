@@ -52,6 +52,27 @@ func (r *GrammarRepository) GetByLevelAndIndex(level string, index int) (*models
 	return pattern, nil
 }
 
+func (r *GrammarRepository) GetByPattern(patternName string, level string) (*models.GrammarPattern, error) {
+	p := &models.GrammarPattern{}
+	query := `
+		SELECT id, pattern, plain_form, meaning, detailed_explanation,
+		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
+		       related_patterns, common_mistakes, index_position, created_at
+		FROM grammar_patterns
+		WHERE pattern = $1 AND jlpt_level = $2
+	`
+	err := r.db.QueryRow(query, patternName, level).Scan(
+		&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
+		&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
+		&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("grammar pattern not found")
+	}
+	return p, err
+}
+
 func (r *GrammarRepository) GetByID(id string) (*models.GrammarPattern, error) {
 	pattern := &models.GrammarPattern{}
 	query := `

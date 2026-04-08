@@ -199,8 +199,8 @@ func (s *GrammarService) GetComparisonPairs(userID, level string) ([]ComparisonP
 		// Look for related patterns marked for comparison
 		for _, related := range p.RelatedPatterns {
 			if related.Relationship == "contrast" || related.Relationship == "opposite" {
-				// Find the related pattern
-				relatedPattern, err := s.grammarRepo.GetByID(related.ID)
+				// Find the related pattern by pattern name
+				relatedPattern, err := s.grammarRepo.GetByPattern(related.Pattern, level)
 				if err != nil {
 					continue
 				}
@@ -214,7 +214,7 @@ func (s *GrammarService) GetComparisonPairs(userID, level string) ([]ComparisonP
 					ID:              pairID,
 					Name:            p.Pattern + " vs " + relatedPattern.Pattern,
 					Description:     related.KeyDifference,
-					PatternA:        p,
+					PatternA:        &p,
 					PatternB:        relatedPattern,
 					KeyDifferences:  []string{related.KeyDifference},
 					UsageBoundaries: "See detailed comparison for usage rules",
@@ -235,8 +235,8 @@ func (s *GrammarService) GetComparisonPairs(userID, level string) ([]ComparisonP
 				ID:          patterns[i].ID + "_vs_" + patterns[i+1].ID,
 				Name:        patterns[i].Pattern + " vs " + patterns[i+1].Pattern,
 				Description: "Compare these related patterns",
-				PatternA:    patterns[i],
-				PatternB:    patterns[i+1],
+				PatternA:    &patterns[i],
+				PatternB:    &patterns[i+1],
 				KeyDifferences: []string{
 					patterns[i].NuanceNotes,
 					patterns[i+1].NuanceNotes,
