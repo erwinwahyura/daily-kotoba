@@ -118,6 +118,8 @@ func LoadSeedJSON(path string) (*SeedData, error) {
 		seedType = "placement"
 	} else if strings.Contains(name, "conjugation") || strings.Contains(name, "conj") {
 		seedType = "conjugation"
+	} else if strings.Contains(name, "jlpt") {
+		seedType = "jlpt"
 	}
 
 	return &SeedData{
@@ -365,6 +367,8 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedPlacement(path)
 		} else if strings.Contains(name, "conjugation") || strings.Contains(name, "conj") {
 			count, err = db.SeedConjugation(path)
+		} else if strings.Contains(name, "jlpt") {
+			count, err = db.SeedJLPT(path)
 		} else {
 			// Unknown type, try generic approach
 			log.Printf("Unknown seed type for %s, skipping", name)
@@ -445,4 +449,64 @@ func isDuplicateError(err error, driver string) bool {
 	}
 	// SQLite
 	return strings.Contains(errStr, "UNIQUE constraint failed") || strings.Contains(errStr, "duplicate")
+}
+
+// SeedJLPT inserts JLPT test data from seed file
+func (db *DB) SeedJLPT(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	count := 0
+	for _, record := range seedData.Records {
+		// Check if this is a test or question by checking for test_id field
+		if _, isQuestion := record["test_id"]; isQuestion {
+			// This is a question
+			err := db.insertJLPTQuestion(record)
+			if err != nil && !isDuplicateError(err, db.Driver) {
+				return count, fmt.Errorf("failed to insert JLPT question: %w", err)
+			}
+			if err == nil {
+				count++
+			}
+		} else if _, isTest := record["section"]; isTest {
+			// This is a test definition
+			err := db.insertJLPTTest(record)
+			if err != nil && !isDuplicateError(err, db.Driver) {
+				return count, fmt.Errorf("failed to insert JLPT test: %w", err)
+			}
+			if err == nil {
+				count++
+			}
+		}
+	}
+
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	if err := db.MarkSeedApplied(seedData.Name, checksum, count); err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
+
+func (db *DB) insertJLPTTest(record map[string]interface{}) error {
+	query := `INSERT INTO jlpt_tests (id, level, section, title, description, time_limit_minutes, total_questions, passing_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := db.Exec(query, record["id"], record["level"], record["section"], record["title"], record["description"], record["time_limit_minutes"], record["total_questions"], record["passing_score"])
+	return err
+}
+
+func (db *DB) insertJLPTQuestion(record map[string]interface{}) error {
+	optionsJSON, _ := json.Marshal(record["options"])
+	query := `INSERT INTO jlpt_questions (id, test_id, question_num, type, question, question_reading, english_prompt, options, correct_index, explanation, point_value, skill_tested) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+	_, err := db.Exec(query, record["id"], record["test_id"], record["question_num"], record["type"], record["question"], record["question_reading"], record["english_prompt"], string(optionsJSON), record["correct_index"], record["explanation"], record["point_value"], record["skill_tested"])
+	return err
 }

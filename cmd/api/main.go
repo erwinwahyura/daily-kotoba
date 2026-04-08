@@ -88,6 +88,7 @@ func main() {
 	srsRepo := repository.NewSRSRepository(wrappedDB)
 	conjRepo := repository.NewConjugationRepository(wrappedDB)
 	ttsRepo := repository.NewTTSRepository(wrappedDB)
+	jlptRepo := repository.NewJLPTRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -97,10 +98,12 @@ func main() {
 	srsService := services.NewSRSService(srsRepo, vocabRepo, grammarRepo, userRepo)
 	conjService := services.NewConjugationService(conjRepo)
 	ttsService := services.NewTTSService(ttsRepo)
+	jlptService := services.NewJLPTService(jlptRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	ttsHandler := handlers.NewTTSHandler(ttsService)
+	jlptHandler := handlers.NewJLPTHandler(jlptService)
 	vocabHandler := handlers.NewVocabularyHandler(vocabService)
 	progressHandler := handlers.NewProgressHandler(vocabService)
 	placementHandler := handlers.NewPlacementHandler(placementService)
@@ -211,6 +214,18 @@ func main() {
 			}
 			// Public audio file serving (no auth needed for playback)
 			v1.GET("/tts/audio/:id", ttsHandler.GetAudio)
+
+			// JLPT Mock Test routes
+			jlpt := protected.Group("/jlpt")
+			{
+				jlpt.GET("/levels", jlptHandler.GetLevels)             // Get JLPT level info
+				jlpt.GET("/tests/:level", jlptHandler.GetTests)        // Get tests for level
+				jlpt.POST("/start", jlptHandler.StartTest)             // Start a new test
+				jlpt.POST("/answer", jlptHandler.SubmitAnswer)         // Submit answer
+				jlpt.POST("/complete/:session_id", jlptHandler.CompleteTest) // Finish test
+				jlpt.GET("/progress/:session_id", jlptHandler.GetProgress)    // Get progress
+				jlpt.GET("/history", jlptHandler.GetHistory)           // Get test history
+			}
 		}
 	}
 

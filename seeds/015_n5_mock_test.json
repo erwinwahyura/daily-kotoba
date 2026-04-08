@@ -1,0 +1,82 @@
+[
+  {
+    "id": "n5-vocab-test-001",
+    "level": "N5",
+    "section": "vocabulary",
+    "title": "N5 Vocabulary Practice Test",
+    "description": "20 questions covering N5 core vocabulary",
+    "time_limit_minutes": 20,
+    "total_questions": 20,
+    "passing_score": 14
+  },
+  {
+    "id": "n5-q-001",
+    "test_id": "n5-vocab-test-001",
+    "question_num": 1,
+    "type": "multiple_choice",
+    "question": "「たべる」の意味は何ですか。",
+    "question_reading": "たべる のいみはなんですか",
+    "english_prompt": "What is the meaning of 食べる?",
+    "options": ["to eat", "to drink", "to sleep", "to walk"],
+    "correct_index": 0,
+    "explanation": "食べる (taberu) means 'to eat' in Japanese.",
+    "point_value": 1,
+    "skill_tested": "vocab"
+  },
+  {
+    "id": "n5-q-002",
+    "test_id": "n5-vocab-test-001",
+    "question_num": 2,
+    "type": "multiple_choice",
+    "question": "「いぬ」は何ですか。",
+    "question_reading": "いぬはなんですか",
+    "english_prompt": "What is 犬?",
+    "options": ["cat", "dog", "bird", "fish"],
+    "correct_index": 1,
+    "explanation": "犬 (inu) means 'dog' in Japanese.",
+    "point_value": 1,
+    "skill_tested": "vocab"
+  },
+  {
+    "id": "n5-q-003",
+    "test_id": "n5-vocab-test-001",
+    "question_num": 3,
+    "type": "multiple_choice",
+    "question": "「にほん」はどこの国ですか。",
+    "question_reading": "にほんはどこのくにですか",
+    "english_prompt": "Japan is which country?",
+    "options": ["China", "Korea", "Japan", "Thailand"],
+    "correct_index": 2,
+    "explanation": "日本 (Nihon/Nippon) means Japan.",
+    "point_value": 1,
+    "skill_tested": "vocab"
+  },
+  {
+    "id": "n5-q-004",
+    "test_id": "n5-vocab-test-001",
+    "question_num": 4,
+    "type": "multiple_choice",
+    "question": "「いち」は何番ですか。",
+    "question_reading": "いちはなんばんですか",
+    "english_prompt": "What number is 一?",
+    "options": ["1", "2", "10", "100"],
+    "correct_index": 0,
+    "explanation": "一 (ichi) is the number 1.",
+    "point_value": 1,
+    "skill_tested": "vocab"
+  },
+  {
+    "id": "n5-q-005",
+    "test_id": "n5-vocab-test-001",
+    "question_num": 5,
+    "type": "multiple_choice",
+    "question": "「みず」を飲みます。",
+    "question_reading": "みずをのみます",
+    "english_prompt": "I drink water.",
+    "options": ["mizu means tea", "mizu means juice", "mizu means water", "mizu means coffee"],
+    "correct_index": 2,
+    "explanation": "水 (mizu) means water.",
+    "point_value": 1,
+    "skill_tested": "vocab"
+  }
+]
