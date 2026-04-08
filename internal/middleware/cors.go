@@ -11,6 +11,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		allowedOrigins := []string{
 			"https://erwinwahyura.github.io",
 			"https://kotoba-web.erwinwahyura.workers.dev",
+			"https://sensei.erwarx.com",
 			"http://localhost:3000",
 			"http://localhost:8080",
 			"http://localhost:5173", // Vite dev server
