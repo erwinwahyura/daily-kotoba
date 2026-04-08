@@ -116,6 +116,8 @@ func LoadSeedJSON(path string) (*SeedData, error) {
 		seedType = "grammar"
 	} else if strings.Contains(name, "placement") {
 		seedType = "placement"
+	} else if strings.Contains(name, "conjugation") || strings.Contains(name, "conj") {
+		seedType = "conjugation"
 	}
 
 	return &SeedData{
@@ -361,6 +363,8 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedGrammar(path)
 		} else if strings.Contains(name, "placement") {
 			count, err = db.SeedPlacement(path)
+		} else if strings.Contains(name, "conjugation") || strings.Contains(name, "conj") {
+			count, err = db.SeedConjugation(path)
 		} else {
 			// Unknown type, try generic approach
 			log.Printf("Unknown seed type for %s, skipping", name)
@@ -376,6 +380,56 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 	}
 
 	return nil
+}
+
+// SeedConjugation inserts conjugation challenge data from seed file
+func (db *DB) SeedConjugation(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	count := 0
+	for _, record := range seedData.Records {
+		columns := make([]string, 0)
+		placeholders := make([]string, 0)
+		values := make([]interface{}, 0)
+
+		for col, val := range record {
+			columns = append(columns, col)
+			placeholders = append(placeholders, db.Placeholder(len(values)+1))
+			values = append(values, val)
+		}
+
+		query := fmt.Sprintf(
+			"INSERT INTO conjugation_challenges (%s) VALUES (%s)",
+			strings.Join(columns, ", "),
+			strings.Join(placeholders, ", "),
+		)
+
+		if _, err := db.Exec(query, values...); err != nil {
+			if !isDuplicateError(err, db.Driver) {
+				return count, fmt.Errorf("failed to insert conjugation record: %w", err)
+			}
+		} else {
+			count++
+		}
+	}
+
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	if err := db.MarkSeedApplied(seedData.Name, checksum, count); err != nil {
+		return count, err
+	}
+
+	return count, nil
 }
 
 // isDuplicateError checks if error is a duplicate/unique constraint violation
