@@ -1,7 +1,8 @@
 -- Add grammar progress columns to user_progress table
-ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS current_grammar_index INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS last_grammar_id TEXT REFERENCES grammar_patterns(id);
-ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS grammar_learned_count INTEGER NOT NULL DEFAULT 0;
+-- SQLite doesn't support ADD COLUMN IF NOT EXISTS, using plain ADD COLUMN
+ALTER TABLE user_progress ADD COLUMN current_grammar_index INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE user_progress ADD COLUMN last_grammar_id TEXT REFERENCES grammar_patterns(id);
+ALTER TABLE user_progress ADD COLUMN grammar_learned_count INTEGER NOT NULL DEFAULT 0;
 
 -- Create user_grammar_status table for tracking grammar pattern status
 CREATE TABLE IF NOT EXISTS user_grammar_status (
