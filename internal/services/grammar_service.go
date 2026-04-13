@@ -330,3 +330,8 @@ func (s *GrammarService) ComparePatterns(patternAID, patternBID string) (*Detail
 func (s *GrammarService) buildDecisionTree(a, b *models.GrammarPattern) string {
 	return "Choose " + a.Pattern + " when: " + a.Meaning + ". Choose " + b.Pattern + " when: " + b.Meaning + "."
 }
+
+// SearchGrammar searches grammar patterns by query string
+func (s *GrammarService) SearchGrammar(query, level string) ([]*models.GrammarPattern, error) {
+	return s.grammarRepo.Search(query, level)
+}

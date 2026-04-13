@@ -169,6 +169,7 @@ func main() {
 
 			// Vocabulary by level route (outside /vocab group for cleaner URL)
 			protected.GET("/vocab/level/:level", vocabHandler.GetVocabularyByLevel)
+			protected.GET("/vocab/search", vocabHandler.SearchVocabulary)
 
 			// Progress routes
 			progress := protected.Group("/progress")
@@ -187,6 +188,7 @@ func main() {
 				grammar.GET("/compare/detail", grammarHandler.ComparePatterns)        // Compare specific patterns
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
+			protected.GET("/grammar/search", grammarHandler.SearchGrammar)
 
 			// SRS (Spaced Repetition) routes
 			srs := protected.Group("/srs")

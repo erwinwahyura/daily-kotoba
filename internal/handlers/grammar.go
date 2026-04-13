@@ -147,3 +147,22 @@ func (h *GrammarHandler) ComparePatterns(c *gin.Context) {
 
 	utils.SendSuccess(c, 200, "Comparison retrieved successfully", comparison)
 }
+
+// SearchGrammar searches grammar patterns by query
+func (h *GrammarHandler) SearchGrammar(c *gin.Context) {
+	query := c.Query("q")
+	if query == "" {
+		utils.SendError(c, 400, "Search query is required", nil)
+		return
+	}
+
+	level := c.Query("level")
+	
+	results, err := h.grammarService.SearchGrammar(query, level)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to search grammar patterns", err)
+		return
+	}
+
+	utils.SendSuccess(c, 200, "Search completed", gin.H{"results": results, "count": len(results)})
+}

@@ -191,3 +191,55 @@ func (r *VocabRepository) BulkCreate(vocabList []models.Vocabulary) error {
 
 	return tx.Commit()
 }
+
+func (r *VocabRepository) Search(query, level string) ([]*models.Vocabulary, error) {
+	var args []interface{}
+	
+	searchPattern := "%" + query + "%"
+	args = append(args, searchPattern, searchPattern, searchPattern)
+	
+	whereClause := "WHERE (word LIKE $1 OR reading LIKE $2 OR short_meaning LIKE $3)"
+	
+	if level != "" {
+		whereClause += fmt.Sprintf(" AND jlpt_level = $%d", len(args)+1)
+		args = append(args, level)
+	}
+	
+	querySQL := fmt.Sprintf(`
+		SELECT id, word, reading, short_meaning, detailed_explanation,
+		       example_sentences, usage_notes, jlpt_level, index_position, created_at
+		FROM vocabulary
+		%s
+		ORDER BY jlpt_level DESC, index_position ASC
+		LIMIT 20
+	`, whereClause)
+	
+	rows, err := r.db.Query(querySQL, args...)
+	if err != nil {
+		return nil, fmt.Errorf("search query failed: %w", err)
+	}
+	defer rows.Close()
+	
+	var results []*models.Vocabulary
+	for rows.Next() {
+		vocab := &models.Vocabulary{}
+		err := rows.Scan(
+			&vocab.ID,
+			&vocab.Word,
+			&vocab.Reading,
+			&vocab.ShortMeaning,
+			&vocab.DetailedExplanation,
+			&vocab.ExampleSentences,
+			&vocab.UsageNotes,
+			&vocab.JLPTLevel,
+			&vocab.IndexPosition,
+			&vocab.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, vocab)
+	}
+	
+	return results, rows.Err()
+}

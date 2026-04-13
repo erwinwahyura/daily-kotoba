@@ -278,6 +278,11 @@ func (s *VocabService) BulkCreateVocabulary(vocabList []models.Vocabulary) error
 	return s.vocabRepo.BulkCreate(vocabList)
 }
 
+// SearchVocabulary searches vocabulary by query string
+func (s *VocabService) SearchVocabulary(query, level string) ([]*models.Vocabulary, error) {
+	return s.vocabRepo.Search(query, level)
+}
+
 // getNextLevel returns the next JLPT level after completing current
 func getNextLevel(current string) string {
 	levels := []string{"N5", "N4", "N3", "N2", "N1"}

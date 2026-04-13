@@ -202,3 +202,49 @@ func (r *GrammarRepository) BulkCreate(patterns []models.GrammarPattern) error {
 
 	return tx.Commit()
 }
+
+func (r *GrammarRepository) Search(query, level string) ([]*models.GrammarPattern, error) {
+	var args []interface{}
+	
+	searchPattern := "%" + query + "%"
+	args = append(args, searchPattern, searchPattern)
+	
+	whereClause := "WHERE (pattern LIKE $1 OR meaning LIKE $2)"
+	
+	if level != "" {
+		whereClause += fmt.Sprintf(" AND jlpt_level = $%d", len(args)+1)
+		args = append(args, level)
+	}
+	
+	querySQL := fmt.Sprintf(`
+		SELECT id, pattern, plain_form, meaning, detailed_explanation,
+		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
+		       related_patterns, common_mistakes, index_position, created_at
+		FROM grammar_patterns
+		%s
+		ORDER BY jlpt_level DESC, index_position ASC
+		LIMIT 20
+	`, whereClause)
+	
+	rows, err := r.db.Query(querySQL, args...)
+	if err != nil {
+		return nil, fmt.Errorf("search query failed: %w", err)
+	}
+	defer rows.Close()
+	
+	var results []*models.GrammarPattern
+	for rows.Next() {
+		p := &models.GrammarPattern{}
+		err := rows.Scan(
+			&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
+			&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
+			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, p)
+	}
+	
+	return results, rows.Err()
+}
