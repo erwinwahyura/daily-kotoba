@@ -31,7 +31,12 @@ func (h *ConjugationHandler) StartSession(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccess(c, 200, "Conjugation session started", response)
+	utils.SendSuccess(c, 200, "Conjugation session started", gin.H{
+		"session":    response.Session,
+		"challenges": response.Challenges,
+		"progress":   response.Progress,
+		"form_info":  response.FormInfo,
+	})
 }
 
 // SubmitAnswer checks user's conjugation answer

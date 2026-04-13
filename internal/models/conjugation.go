@@ -78,12 +78,20 @@ type ConjugationAttempt struct {
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
-// ConjugationChallengeResponse for API
+// ConjugationChallengeResponse for API (single challenge - legacy)
 type ConjugationChallengeResponse struct {
 	Challenge   *ConjugationChallenge `json:"challenge"`
 	Progress    *ConjugationProgress   `json:"progress"`
 	FormInfo    *ConjugationFormType    `json:"form_info"`
 	SessionID   string                 `json:"session_id"`
+}
+
+// ConjugationSessionResponse for API (full session with all challenges)
+type ConjugationSessionResponse struct {
+	Session    *ConjugationSession       `json:"session"`
+	Challenges []*ConjugationChallenge   `json:"challenges"`
+	Progress   *ConjugationProgress      `json:"progress"`
+	FormInfo   *ConjugationFormType      `json:"form_info"`
 }
 
 // ConjugationProgress tracks overall progress

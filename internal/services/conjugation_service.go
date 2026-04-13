@@ -18,7 +18,7 @@ func NewConjugationService(conjRepo *repository.ConjugationRepository) *Conjugat
 }
 
 // StartDrillSession starts a new conjugation drill session for a user
-func (s *ConjugationService) StartDrillSession(userID string, targetForm string) (*models.ConjugationChallengeResponse, error) {
+func (s *ConjugationService) StartDrillSession(userID string, targetForm string) (*models.ConjugationSessionResponse, error) {
 	// Get user's current level (simplified - could fetch from user profile)
 	jlptLevel := "N4" // Default, could be determined from user progress
 
@@ -49,8 +49,9 @@ func (s *ConjugationService) StartDrillSession(userID string, targetForm string)
 	// Get form info
 	formInfo := s.getFormInfo(targetForm)
 
-	return &models.ConjugationChallengeResponse{
-		Challenge: challenges[0],
+	return &models.ConjugationSessionResponse{
+		Session:    session,
+		Challenges: challenges,
 		Progress: &models.ConjugationProgress{
 			CurrentForm:      targetForm,
 			TotalAttempts:    0,
@@ -58,8 +59,7 @@ func (s *ConjugationService) StartDrillSession(userID string, targetForm string)
 			DailyGoal:        20,
 			DailyCompleted:   0,
 		},
-		FormInfo:  formInfo,
-		SessionID: session.ID,
+		FormInfo: formInfo,
 	}, nil
 }
 
