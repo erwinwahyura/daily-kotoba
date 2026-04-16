@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 type PlacementRepository struct {

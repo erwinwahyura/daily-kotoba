@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/kotoba-api/internal/services"
-	"github.com/yourusername/kotoba-api/internal/utils"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/utils"
 )
 
 func AuthMiddleware(authService *services.AuthService) gin.HandlerFunc {

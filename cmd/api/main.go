@@ -11,12 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/yourusername/kotoba-api/internal/config"
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/handlers"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/repository"
-	"github.com/yourusername/kotoba-api/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/config"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/handlers"
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
 )
 
 func main() {

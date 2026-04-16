@@ -1,4 +1,4 @@
-module github.com/yourusername/kotoba-api
+module github.com/erwinwahyura/daily-kotoba
 
 go 1.25.1
 

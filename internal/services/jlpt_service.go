@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
 )
 
 type JLPTService struct {
