@@ -208,6 +208,8 @@ func main() {
 				conjugation.GET("/start", conjHandler.StartSession)     // Start drill session
 				conjugation.POST("/answer", conjHandler.SubmitAnswer)    // Submit answer
 				conjugation.GET("/progress", conjHandler.GetProgress)    // Get progress stats
+				conjugation.GET("/weak-points", conjHandler.GetWeakPoints) // Get weak points analysis
+				conjugation.POST("/weak-points/drill", conjHandler.StartWeakPointDrill) // Start weak point drill
 			}
 
 			// TTS (Text-to-Speech) routes

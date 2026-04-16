@@ -254,3 +254,110 @@ func (s *ConjugationService) getExplanation(challenge *models.ConjugationChallen
 	}
 	return fmt.Sprintf("The correct answer is %s. Hint: %s", challenge.FullAnswer, challenge.Hint)
 }
+
+// GetWeakPointsAnalysis analyzes user's conjugation performance
+func (s *ConjugationService) GetWeakPointsAnalysis(userID string) (*models.WeakPointsAnalysis, error) {
+	// Get accuracy stats per form
+	weakPoints, err := s.conjRepo.GetWeakPointsByForm(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Identify weak forms (accuracy < 70%)
+	var weakForms []models.WeakForm
+	var strongForms []models.WeakForm
+	
+	for form, data := range weakPoints {
+		accuracy := data["accuracy"].(float64)
+		total := data["total"].(int)
+		
+		wf := models.WeakForm{
+			Form:     form,
+			Accuracy: accuracy,
+			Total:    total,
+		}
+		
+		if accuracy < 70.0 && total >= 5 {
+			weakForms = append(weakForms, wf)
+		} else if accuracy >= 80.0 {
+			strongForms = append(strongForms, wf)
+		}
+	}
+	
+	// Sort weak forms by accuracy (lowest first)
+	for i := 0; i < len(weakForms); i++ {
+		for j := i + 1; j < len(weakForms); j++ {
+			if weakForms[i].Accuracy > weakForms[j].Accuracy {
+				weakForms[i], weakForms[j] = weakForms[j], weakForms[i]
+			}
+		}
+	}
+	
+	return &models.WeakPointsAnalysis{
+		WeakForms:   weakForms,
+		StrongForms: strongForms,
+		TotalForms:  len(weakPoints),
+	}, nil
+}
+
+// GenerateWeakPointDrill creates a focused drill for weak forms
+func (s *ConjugationService) GenerateWeakPointDrill(userID string) (*models.ConjugationSessionResponse, error) {
+	// Get weak points analysis
+	analysis, err := s.GetWeakPointsAnalysis(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// If no weak forms, return error
+	if len(analysis.WeakForms) == 0 {
+		return nil, fmt.Errorf("no weak points found - you're doing great!")
+	}
+	
+	// Pick the weakest form
+	targetForm := analysis.WeakForms[0].Form
+	
+	// Get challenges for this weak form (prioritizing ones user got wrong)
+	challenges, err := s.conjRepo.GetChallengesForWeakPoint(targetForm, userID, 10)
+	if err != nil {
+		return nil, err
+	}
+	
+	if len(challenges) == 0 {
+		return nil, fmt.Errorf("no challenges available for form: %s", targetForm)
+	}
+	
+	// Create session
+	session := &models.ConjugationSession{
+		ID:             uuid.New().String(),
+		UserID:         userID,
+		CurrentForm:    targetForm,
+		CurrentIndex:   0,
+		TotalQuestions: len(challenges),
+		StartTime:      time.Now(),
+		LastActive:     time.Now(),
+		IsWeakPointDrill: true,
+		TargetWeakForm: targetForm,
+	}
+	
+	if err := s.conjRepo.CreateSession(session); err != nil {
+		return nil, err
+	}
+	
+	// Get form info
+	formInfo := s.getFormInfo(targetForm)
+	
+	return &models.ConjugationSessionResponse{
+		Session:    session,
+		Challenges: challenges,
+		Progress: &models.ConjugationProgress{
+			CurrentForm:      targetForm,
+			TotalAttempts:    0,
+			CurrentStreak:    0,
+			DailyGoal:        10,
+			DailyCompleted:   0,
+			IsWeakPointDrill: true,
+			WeakFormAccuracy: analysis.WeakForms[0].Accuracy,
+		},
+		FormInfo: formInfo,
+	}, nil
+}

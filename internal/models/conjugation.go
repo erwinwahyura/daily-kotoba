@@ -62,6 +62,8 @@ type ConjugationSession struct {
 	StartTime       time.Time `json:"start_time" db:"start_time"`
 	LastActive      time.Time `json:"last_active" db:"last_active"`
 	CompletedForms  []string  `json:"completed_forms" db:"completed_forms"` // JSON array
+	IsWeakPointDrill bool     `json:"is_weak_point_drill,omitempty" db:"is_weak_point_drill"`
+	TargetWeakForm   string    `json:"target_weak_form,omitempty" db:"target_weak_form"`
 }
 
 // ConjugationAttempt records a single attempt
@@ -92,6 +94,20 @@ type ConjugationSessionResponse struct {
 	Challenges []*ConjugationChallenge   `json:"challenges"`
 	Progress   *ConjugationProgress      `json:"progress"`
 	FormInfo   *ConjugationFormType      `json:"form_info"`
+}
+
+// WeakForm represents a form with accuracy stats
+type WeakForm struct {
+	Form     string  `json:"form"`
+	Accuracy float64 `json:"accuracy"`
+	Total    int     `json:"total_attempts"`
+}
+
+// WeakPointsAnalysis represents user's weak areas
+type WeakPointsAnalysis struct {
+	WeakForms   []WeakForm `json:"weak_forms"`
+	StrongForms []WeakForm `json:"strong_forms"`
+	TotalForms  int        `json:"total_forms_studied"`
 }
 
 // ConjugationProgress tracks overall progress

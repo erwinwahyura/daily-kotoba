@@ -78,6 +78,104 @@ func (r *ConjugationRepository) GetChallengesByForm(formType, jlptLevel string, 
 	return challenges, rows.Err()
 }
 
+// GetWeakPointsByForm gets accuracy stats per form for a user
+func (r *ConjugationRepository) GetWeakPointsByForm(userID string) (map[string]map[string]interface{}, error) {
+	query := `
+		SELECT 
+			ch.target_form,
+			COUNT(ca.id) as total_attempts,
+			SUM(CASE WHEN ca.is_correct THEN 1 ELSE 0 END) as correct_count,
+			AVG(CASE WHEN ca.is_correct THEN 100.0 ELSE 0.0 END) as accuracy
+		FROM conjugation_attempts ca
+		JOIN conjugation_challenges ch ON ca.challenge_id = ch.id
+		JOIN conjugation_sessions cs ON ca.session_id = cs.id
+		WHERE cs.user_id = $1
+		GROUP BY ch.target_form
+		ORDER BY accuracy ASC
+	`
+	
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	weakPoints := make(map[string]map[string]interface{})
+	
+	for rows.Next() {
+		var form string
+		var total, correct int
+		var accuracy float64
+		
+		if err := rows.Scan(&form, &total, &correct, &accuracy); err != nil {
+			continue
+		}
+		
+		weakPoints[form] = map[string]interface{}{
+			"form":          form,
+			"total":         total,
+			"correct":       correct,
+			"accuracy":      accuracy,
+			"incorrect":     total - correct,
+		}
+	}
+	
+	return weakPoints, rows.Err()
+}
+
+// GetChallengesForWeakPoint gets challenges for a specific weak form
+func (r *ConjugationRepository) GetChallengesForWeakPoint(formType, userID string, limit int) ([]*models.ConjugationChallenge, error) {
+	if limit < 1 || limit > 20 {
+		limit = 10
+	}
+	
+	// Get challenges the user has gotten wrong before, or random ones if none
+	query := `
+		WITH wrong_challenges AS (
+			SELECT DISTINCT ch.id
+			FROM conjugation_challenges ch
+			JOIN conjugation_attempts ca ON ch.id = ca.challenge_id
+			JOIN conjugation_sessions cs ON ca.session_id = cs.id
+			WHERE ch.target_form = $1 
+			  AND cs.user_id = $2
+			  AND ca.is_correct = false
+		)
+		SELECT ch.id, ch.base_form, ch.reading, ch."group", ch.target_form, 
+		       ch.target_ending, ch.full_answer, ch.hint, ch.difficulty, 
+		       ch.jlpt_level, ch.category, ch.created_at
+		FROM conjugation_challenges ch
+		LEFT JOIN wrong_challenges wc ON ch.id = wc.id
+		WHERE ch.target_form = $1
+		ORDER BY 
+			CASE WHEN wc.id IS NOT NULL THEN 0 ELSE 1 END,
+			RANDOM()
+		LIMIT $3
+	`
+	
+	rows, err := r.db.Query(query, formType, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var challenges []*models.ConjugationChallenge
+	for rows.Next() {
+		c := &models.ConjugationChallenge{}
+		err := rows.Scan(
+			&c.ID, &c.BaseForm, &c.Reading, &c.Group,
+			&c.TargetForm, &c.TargetEnding, &c.FullAnswer,
+			&c.Hint, &c.Difficulty, &c.JLPTLevel,
+			&c.Category, &c.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		challenges = append(challenges, c)
+	}
+	
+	return challenges, rows.Err()
+}
+
 // GetChallengesByLevel retrieves all challenges for a JLPT level
 func (r *ConjugationRepository) GetChallengesByLevel(jlptLevel string) ([]*models.ConjugationChallenge, error) {
 	query := `
