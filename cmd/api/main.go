@@ -91,6 +91,7 @@ func main() {
 	jlptRepo := repository.NewJLPTRepository(wrappedDB)
 	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
 	goalsRepo := repository.NewGoalsRepository(wrappedDB)
+	listeningRepo := repository.NewListeningRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -103,6 +104,7 @@ func main() {
 	jlptService := services.NewJLPTService(jlptRepo)
 	kanjiService := services.NewKanjiService(kanjiRepo)
 	goalsService := services.NewGoalsService(goalsRepo)
+	listeningService := services.NewListeningService(listeningRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -116,6 +118,7 @@ func main() {
 	conjHandler := handlers.NewConjugationHandler(conjService)
 	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
 	goalsHandler := handlers.NewGoalsHandler(goalsService)
+	listeningHandler := handlers.NewListeningHandler(listeningService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -262,6 +265,19 @@ func main() {
 				goals.GET("/achievements/all", goalsHandler.GetAllAchievements) // Get all available
 				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)    // Get last 7 days
 			}
+
+			// Listening Practice routes
+			listening := protected.Group("/listening")
+			{
+				listening.GET("/exercises/:level", listeningHandler.GetExercises) // Get exercises by level
+				listening.GET("/exercise/:id", listeningHandler.GetExercise)        // Get specific exercise
+				listening.POST("/session/start", listeningHandler.StartSession)    // Start listening session
+				listening.POST("/session/answer", listeningHandler.SubmitAnswer)   // Submit answer
+				listening.GET("/session/:id", listeningHandler.GetSession)          // Get session progress
+				listening.GET("/stats", listeningHandler.GetStats)                  // Get user stats
+			}
+			// Admin: Seed listening exercises
+			protected.POST("/listening/seed", listeningHandler.SeedExercises)
 		}
 	}
 
