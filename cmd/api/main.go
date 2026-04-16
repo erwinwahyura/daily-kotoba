@@ -89,6 +89,7 @@ func main() {
 	conjRepo := repository.NewConjugationRepository(wrappedDB)
 	ttsRepo := repository.NewTTSRepository(wrappedDB)
 	jlptRepo := repository.NewJLPTRepository(wrappedDB)
+	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -99,6 +100,7 @@ func main() {
 	conjService := services.NewConjugationService(conjRepo)
 	ttsService := services.NewTTSService(ttsRepo)
 	jlptService := services.NewJLPTService(jlptRepo)
+	kanjiService := services.NewKanjiService(kanjiRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -110,6 +112,7 @@ func main() {
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 	srsHandler := handlers.NewSRShandler(srsService)
 	conjHandler := handlers.NewConjugationHandler(conjService)
+	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -228,6 +231,19 @@ func main() {
 				jlpt.GET("/progress/:session_id", jlptHandler.GetProgress)    // Get progress
 				jlpt.GET("/history", jlptHandler.GetHistory)           // Get test history
 			}
+
+			// Kanji Writing Practice routes
+			kanji := protected.Group("/kanji")
+			{
+				kanji.GET("/level/:level", kanjiHandler.GetKanjiByLevel)      // Get kanji by JLPT level
+				kanji.GET("/character/:char", kanjiHandler.GetKanjiByCharacter) // Get kanji details
+				kanji.POST("/practice/start", kanjiHandler.StartPracticeSession) // Start practice session
+				kanji.POST("/practice/compare", kanjiHandler.CompareStroke)     // Compare stroke
+				kanji.GET("/practice/:id", kanjiHandler.GetPracticeSession)     // Get session
+				kanji.GET("/stats", kanjiHandler.GetUserStats)                   // Get user stats
+			}
+			// Admin: Seed kanji data
+			protected.POST("/kanji/seed", kanjiHandler.SeedKanjiData)
 		}
 	}
 
