@@ -90,6 +90,7 @@ func main() {
 	ttsRepo := repository.NewTTSRepository(wrappedDB)
 	jlptRepo := repository.NewJLPTRepository(wrappedDB)
 	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
+	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -101,6 +102,7 @@ func main() {
 	ttsService := services.NewTTSService(ttsRepo)
 	jlptService := services.NewJLPTService(jlptRepo)
 	kanjiService := services.NewKanjiService(kanjiRepo)
+	goalsService := services.NewGoalsService(goalsRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -113,6 +115,7 @@ func main() {
 	srsHandler := handlers.NewSRShandler(srsService)
 	conjHandler := handlers.NewConjugationHandler(conjService)
 	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
+	goalsHandler := handlers.NewGoalsHandler(goalsService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -246,6 +249,19 @@ func main() {
 			}
 			// Admin: Seed kanji data
 			protected.POST("/kanji/seed", kanjiHandler.SeedKanjiData)
+
+			// Goals, Streaks, and Achievements routes
+			goals := protected.Group("/goals")
+			{
+				goals.GET("/daily", goalsHandler.GetDailyProgress)      // Get today's progress
+				goals.POST("/progress", goalsHandler.UpdateProgress)    // Update activity progress
+				goals.GET("/settings", goalsHandler.GetSettings)       // Get goal settings
+				goals.PUT("/settings", goalsHandler.UpdateSettings)    // Update goal settings
+				goals.GET("/streak", goalsHandler.GetStreak)            // Get streak info
+				goals.GET("/achievements", goalsHandler.GetAchievements) // Get earned achievements
+				goals.GET("/achievements/all", goalsHandler.GetAllAchievements) // Get all available
+				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)    // Get last 7 days
+			}
 		}
 	}
 
