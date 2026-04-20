@@ -180,7 +180,7 @@ func (s *SRSService) checkAchievements(userID string, schedule *models.SRSSchedu
 			Name:        "7-Day Streak",
 			Description: "Reviewed 7 items correctly in a row",
 			Icon:        "🔥",
-			UnlockedAt:  time.Now().Format("2006-01-02"),
+			EarnedAt:    time.Now(),
 		}
 	}
 
@@ -191,7 +191,7 @@ func (s *SRSService) checkAchievements(userID string, schedule *models.SRSSchedu
 			Name:        "First Mastery",
 			Description: "Mastered your first item",
 			Icon:        "⭐",
-			UnlockedAt:  time.Now().Format("2006-01-02"),
+			EarnedAt:    time.Now(),
 		}
 	}
 

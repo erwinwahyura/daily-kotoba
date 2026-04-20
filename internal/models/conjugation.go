@@ -112,17 +112,19 @@ type WeakPointsAnalysis struct {
 
 // ConjugationProgress tracks overall progress
 type ConjugationProgress struct {
-	CurrentForm      string             `json:"current_form"`
-	FormsUnlocked    []string           `json:"forms_unlocked"`
-	FormsCompleted   []string           `json:"forms_completed"`
-	FormMastery      map[string]float64 `json:"form_mastery"` // percentage
-	TotalAttempts    int                `json:"total_attempts"`
-	CorrectAttempts  int                `json:"correct_attempts"`
-	AccuracyRate     float64            `json:"accuracy_rate"`
-	CurrentStreak    int                `json:"current_streak"`
-	BestStreak       int                `json:"best_streak"`
-	DailyGoal        int                `json:"daily_goal"`
-	DailyCompleted   int                `json:"daily_completed"`
+	CurrentForm       string             `json:"current_form"`
+	FormsUnlocked     []string           `json:"forms_unlocked"`
+	FormsCompleted    []string           `json:"forms_completed"`
+	FormMastery       map[string]float64 `json:"form_mastery"` // percentage
+	TotalAttempts     int                `json:"total_attempts"`
+	CorrectAttempts   int                `json:"correct_attempts"`
+	AccuracyRate      float64            `json:"accuracy_rate"`
+	CurrentStreak     int                `json:"current_streak"`
+	BestStreak        int                `json:"best_streak"`
+	DailyGoal         int                `json:"daily_goal"`
+	DailyCompleted    int                `json:"daily_completed"`
+	IsWeakPointDrill  bool               `json:"is_weak_point_drill,omitempty"`
+	WeakFormAccuracy  float64            `json:"weak_form_accuracy,omitempty"`
 }
 
 // ConjugationSubmitRequest for answer submission
