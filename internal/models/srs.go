@@ -103,14 +103,7 @@ type SRSStats struct {
 	Accuracy        float64 `json:"accuracy"`      // 0.0-1.0
 }
 
-// Achievement represents a gamification badge
-type Achievement struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Icon        string `json:"icon"`
-	UnlockedAt  string `json:"unlocked_at"`
-}
+
 
 // SM2Result holds the calculation result from SM-2 algorithm
 type SM2Result struct {
