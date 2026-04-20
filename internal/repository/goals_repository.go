@@ -1,20 +1,20 @@
 package repository
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
 	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 // GoalsRepository handles goals and achievements data access
 type GoalsRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
 // NewGoalsRepository creates a new repository
-func NewGoalsRepository(db *sql.DB) *GoalsRepository {
+func NewGoalsRepository(db *db.DB) *GoalsRepository {
 	return &GoalsRepository{db: db}
 }
 

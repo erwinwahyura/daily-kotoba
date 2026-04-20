@@ -1,21 +1,21 @@
 package repository
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
 	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 // KanjiRepository handles kanji data access
 type KanjiRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
 // NewKanjiRepository creates a new repository
-func NewKanjiRepository(db *sql.DB) *KanjiRepository {
+func NewKanjiRepository(db *db.DB) *KanjiRepository {
 	return &KanjiRepository{db: db}
 }
 

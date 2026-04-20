@@ -1,21 +1,21 @@
 package repository
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
 	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 // ListeningRepository handles listening exercise data access
 type ListeningRepository struct {
-	db *sql.DB
+	db *db.DB
 }
 
 // NewListeningRepository creates a new repository
-func NewListeningRepository(db *sql.DB) *ListeningRepository {
+func NewListeningRepository(db *db.DB) *ListeningRepository {
 	return &ListeningRepository{db: db}
 }
 
