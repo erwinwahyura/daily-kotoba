@@ -310,6 +310,76 @@ func (r *KanjiRepository) SeedSampleKanji() error {
 			},
 			CreatedAt: time.Now(),
 		},
+		// Additional kanji for practice
+		{
+			ID:          "kanji_007",
+			Character:   "人",
+			JLPTLevel:   "N5",
+			Meaning:     "Person, people",
+			Readings:    []string{"じん", "にん", "ひと"},
+			StrokeCount: 2,
+			StrokeOrder: []models.Stroke{
+				{StrokeNum: 1, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 20}, EndPoint: models.Point{X: 25, Y: 70}},
+				{StrokeNum: 2, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 20}, EndPoint: models.Point{X: 75, Y: 70}},
+			},
+			CreatedAt: time.Now(),
+		},
+		{
+			ID:          "kanji_008",
+			Character:   "大",
+			JLPTLevel:   "N5",
+			Meaning:     "Big, large",
+			Readings:    []string{"だい", "おお"},
+			StrokeCount: 3,
+			StrokeOrder: []models.Stroke{
+				{StrokeNum: 1, Direction: "horizontal", StartPoint: models.Point{X: 20, Y: 35}, EndPoint: models.Point{X: 80, Y: 35}},
+				{StrokeNum: 2, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 35}, EndPoint: models.Point{X: 25, Y: 80}},
+				{StrokeNum: 3, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 35}, EndPoint: models.Point{X: 75, Y: 80}},
+			},
+			CreatedAt: time.Now(),
+		},
+		{
+			ID:          "kanji_009",
+			Character:   "小",
+			JLPTLevel:   "N5",
+			Meaning:     "Small",
+			Readings:    []string{"しょう", "ちい", "こ", "お"},
+			StrokeCount: 3,
+			StrokeOrder: []models.Stroke{
+				{StrokeNum: 1, Direction: "vertical", StartPoint: models.Point{X: 50, Y: 20}, EndPoint: models.Point{X: 50, Y: 55}},
+				{StrokeNum: 2, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 45}, EndPoint: models.Point{X: 25, Y: 75}},
+				{StrokeNum: 3, Direction: "diagonal", StartPoint: models.Point{X: 50, Y: 45}, EndPoint: models.Point{X: 75, Y: 75}},
+			},
+			CreatedAt: time.Now(),
+		},
+		{
+			ID:          "kanji_010",
+			Character:   "上",
+			JLPTLevel:   "N5",
+			Meaning:     "Up, above",
+			Readings:    []string{"じょう", "うえ", "あ", "のぼ", "かみ"},
+			StrokeCount: 3,
+			StrokeOrder: []models.Stroke{
+				{StrokeNum: 1, Direction: "horizontal", StartPoint: models.Point{X: 20, Y: 30}, EndPoint: models.Point{X: 80, Y: 30}},
+				{StrokeNum: 2, Direction: "horizontal", StartPoint: models.Point{X: 35, Y: 55}, EndPoint: models.Point{X: 65, Y: 55}},
+				{StrokeNum: 3, Direction: "vertical", StartPoint: models.Point{X: 50, Y: 55}, EndPoint: models.Point{X: 50, Y: 85}},
+			},
+			CreatedAt: time.Now(),
+		},
+		{
+			ID:          "kanji_011",
+			Character:   "下",
+			JLPTLevel:   "N5",
+			Meaning:     "Down, below",
+			Readings:    []string{"か", "げ", "くだ", "お", "しも", "さ"},
+			StrokeCount: 3,
+			StrokeOrder: []models.Stroke{
+				{StrokeNum: 1, Direction: "horizontal", StartPoint: models.Point{X: 20, Y: 30}, EndPoint: models.Point{X: 80, Y: 30}},
+				{StrokeNum: 2, Direction: "horizontal", StartPoint: models.Point{X: 35, Y: 55}, EndPoint: models.Point{X: 65, Y: 55}},
+				{StrokeNum: 3, Direction: "vertical", StartPoint: models.Point{X: 50, Y: 30}, EndPoint: models.Point{X: 50, Y: 85}},
+			},
+			CreatedAt: time.Now(),
+		},
 	}
 
 	for _, k := range sampleKanji {
