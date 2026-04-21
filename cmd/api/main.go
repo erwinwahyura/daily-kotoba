@@ -92,6 +92,7 @@ func main() {
 	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
 	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 	listeningRepo := repository.NewListeningRepository(wrappedDB)
+	conversationRepo := repository.NewConversationRepository(wrappedDB.DB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -105,6 +106,7 @@ func main() {
 	kanjiService := services.NewKanjiService(kanjiRepo)
 	goalsService := services.NewGoalsService(goalsRepo)
 	listeningService := services.NewListeningService(listeningRepo)
+	conversationService := services.NewConversationService(conversationRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -119,6 +121,7 @@ func main() {
 	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
 	goalsHandler := handlers.NewGoalsHandler(goalsService)
 	listeningHandler := handlers.NewListeningHandler(listeningService)
+	conversationHandler := handlers.NewConversationHandler(conversationService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -278,6 +281,17 @@ func main() {
 			}
 			// Admin: Seed listening exercises
 			protected.POST("/listening/seed", listeningHandler.SeedExercises)
+
+			// Nichijou Conversation routes (Phase 1: AI Chat)
+			nichijou := protected.Group("/nichijou")
+			{
+				nichijou.GET("/scenarios", conversationHandler.GetScenarios)      // Get available scenarios
+				nichijou.POST("/chat/start", conversationHandler.StartChat)       // Start AI conversation
+				nichijou.POST("/chat/message", conversationHandler.SendMessage)   // Send message
+				nichijou.POST("/chat/end/:id", conversationHandler.EndSession)    // End session
+				nichijou.GET("/chat/history/:id", conversationHandler.GetSessionHistory) // Get session history
+				nichijou.GET("/stats", conversationHandler.GetUserStats)          // Get user stats
+			}
 		}
 	}
 
