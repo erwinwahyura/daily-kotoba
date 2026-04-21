@@ -329,21 +329,21 @@ func (s *ConversationService) buildConversationContext(history []models.Conversa
 }
 
 // generateFallbackResponse creates a simple response when LLM is unavailable
-func (s *ConversationService) generateFallbackResponse(userMessage string, scenario *models.ConversationScenario, level int) string {
+func (s *ConversationService) generateFallbackResponse(userMessage string, scenario *models.ConversationScenario, level int) (string, error) {
 	// Simple contextual responses based on scenario
 	switch scenario.ID {
 	case "konbini":
-		return s.konbiniResponse(userMessage, level)
+		return s.konbiniResponse(userMessage, level), nil
 	case "restaurant":
-		return s.restaurantResponse(userMessage, level)
+		return s.restaurantResponse(userMessage, level), nil
 	case "directions":
-		return s.directionsResponse(userMessage, level)
+		return s.directionsResponse(userMessage, level), nil
 	case "weather_chat":
-		return s.weatherResponse(userMessage, level)
+		return s.weatherResponse(userMessage, level), nil
 	case "weekend_plans":
-		return s.weekendResponse(userMessage, level)
+		return s.weekendResponse(userMessage, level), nil
 	default:
-		return "そうですね。 (I see.)"
+		return "そうですね。 (I see.)", nil
 	}
 }
 
