@@ -92,7 +92,7 @@ func main() {
 	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
 	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 	listeningRepo := repository.NewListeningRepository(wrappedDB)
-	conversationRepo := repository.NewConversationRepository(wrappedDB.DB)
+	conversationRepo := repository.NewConversationRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
