@@ -23,7 +23,7 @@ func NewConversationHandler(conversationService *services.ConversationService) *
 
 // GetScenarios returns available conversation scenarios
 func (h *ConversationHandler) GetScenarios(c *gin.Context) {
-	userID, exists := c.Get("userID")
+	_, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
