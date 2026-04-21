@@ -351,10 +351,10 @@ func (s *ConversationService) generateFallbackResponse(userMessage string, scena
 func (s *ConversationService) konbiniResponse(userMessage string, level int) string {
 	responses := []string{
 		"はい、かしこまりました。",
-		「お弁当、温めますか？",
-		「ポイントカード、お持ちですか？",
-		「袋、お分けしますか？",
-		「ありがとうございました。",
+		"お弁当、温めますか？",
+		"ポイントカード、お持ちですか？",
+		"袋、お分けしますか？",
+		"ありがとうございました。",
 	}
 	// Simple rotation for demo
 	return responses[time.Now().Second()%len(responses)]
