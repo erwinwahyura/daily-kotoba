@@ -94,6 +94,24 @@ func main() {
 	listeningRepo := repository.NewListeningRepository(wrappedDB)
 	conversationRepo := repository.NewConversationRepository(wrappedDB)
 
+	// Seed static data (kanji, listening exercises, conversation scenarios)
+	log.Println("Seeding static data...")
+	if err := kanjiRepo.SeedSampleKanji(); err != nil {
+		log.Printf("Warning: failed to seed kanji: %v", err)
+	} else {
+		log.Println("Kanji data seeded successfully")
+	}
+	if err := listeningRepo.SeedSampleExercises(); err != nil {
+		log.Printf("Warning: failed to seed listening exercises: %v", err)
+	} else {
+		log.Println("Listening exercises seeded successfully")
+	}
+	if err := conversationRepo.SeedScenarios(); err != nil {
+		log.Printf("Warning: failed to seed conversation scenarios: %v", err)
+	} else {
+		log.Println("Conversation scenarios seeded successfully")
+	}
+
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	vocabService := services.NewVocabService(vocabRepo, progressRepo, userRepo)
