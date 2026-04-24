@@ -367,7 +367,7 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedPlacement(path)
 		} else if strings.Contains(name, "conjugation") || strings.Contains(name, "conj") {
 			count, err = db.SeedConjugation(path)
-		} else if strings.Contains(name, "jlpt") {
+		} else if strings.Contains(name, "jlpt") || strings.Contains(name, "mock_test") {
 			count, err = db.SeedJLPT(path)
 		} else {
 			// Unknown type, try generic approach
