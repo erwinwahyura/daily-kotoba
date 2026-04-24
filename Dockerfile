@@ -31,6 +31,9 @@ COPY --from=builder /app/main .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seeds ./seeds
 
+# Create data directory for persistent SQLite
+RUN mkdir -p /data
+
 # Expose port
 EXPOSE 8080
 
