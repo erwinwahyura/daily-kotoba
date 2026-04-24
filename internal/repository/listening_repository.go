@@ -259,6 +259,35 @@ func (r *ListeningRepository) SeedSampleExercises() error {
 			},
 			Topic: "announcement",
 		},
+		{
+			ID:          "listen_n3_001",
+			Title:       "Office Conversation",
+			JLPTLevel:   "N3",
+			Difficulty:  "hard",
+			AudioURL:    "https://example.com/audio/n3_office.mp3",
+			Duration:    90,
+			Transcript:  "田中さん、来週の会議の資料はできましたか。\nはい、ほぼ完成しました。\nあと少しで終わりますので、今日中にお送りします。\nわかりました。よろしくお願いします。",
+			Translation: "Tanaka-san, is the material for next week's meeting ready?\nYes, it's almost complete.\nI'll finish it soon and send it to you today.\nUnderstood. Thank you for your help.",
+			Vocabulary: []models.VocabItem{
+				{Word: "来週", Reading: "らいしゅう", Meaning: "Next week", Timestamp: 0},
+				{Word: "会議", Reading: "かいぎ", Meaning: "Meeting", Timestamp: 3},
+				{Word: "資料", Reading: "しりょう", Meaning: "Materials", Timestamp: 5},
+				{Word: "ほぼ", Reading: "ほぼ", Meaning: "Almost", Timestamp: 15},
+				{Word: "完成", Reading: "かんせい", Meaning: "Complete", Timestamp: 17},
+				{Word: "今日中", Reading: "きょうじゅう", Meaning: "Today (by end of)", Timestamp: 35},
+			},
+			Questions: []models.ListeningQuestion{
+				{
+					ID:          "q1",
+					Question:    "When will the materials be sent?",
+					Options:     []string{"Tomorrow", "Today", "Next week", "Not mentioned"},
+					Correct:     1,
+					Timestamp:   90,
+					Explanation: "The speaker says 今日中にお送りします which means 'I will send it today'.",
+				},
+			},
+			Topic: "conversation",
+		},
 	}
 
 	for _, ex := range exercises {
