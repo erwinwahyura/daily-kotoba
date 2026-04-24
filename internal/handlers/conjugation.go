@@ -24,8 +24,9 @@ func (h *ConjugationHandler) StartSession(c *gin.Context) {
 	}
 
 	form := c.DefaultQuery("form", "te")
+	maxLevel := c.DefaultQuery("max_level", "N5")
 
-	response, err := h.service.StartDrillSession(userID, form)
+	response, err := h.service.StartDrillSessionWithLevel(userID, form, maxLevel)
 	if err != nil {
 		utils.SendError(c, 500, "Failed to start conjugation session", err)
 		return

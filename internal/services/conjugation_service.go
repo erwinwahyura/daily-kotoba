@@ -17,13 +17,22 @@ func NewConjugationService(conjRepo *repository.ConjugationRepository) *Conjugat
 	return &ConjugationService{conjRepo: conjRepo}
 }
 
-// StartDrillSession starts a new conjugation drill session for a user
+// StartDrillSession starts a new conjugation drill session for a user (backward compatible)
 func (s *ConjugationService) StartDrillSession(userID string, targetForm string) (*models.ConjugationSessionResponse, error) {
-	// Get user's current level (simplified - could fetch from user profile)
-	jlptLevel := "N4" // Default, could be determined from user progress
+	return s.StartDrillSessionWithLevel(userID, targetForm, "N5")
+}
 
-	// Get challenges for the form
-	challenges, err := s.conjRepo.GetChallengesByForm(targetForm, jlptLevel, 10)
+// StartDrillSessionWithLevel starts a new conjugation drill session with max JLPT level
+// maxLevel determines the highest JLPT level to include (N5 = only N5, N4 = N5+N4, etc.)
+func (s *ConjugationService) StartDrillSessionWithLevel(userID string, targetForm string, maxLevel string) (*models.ConjugationSessionResponse, error) {
+	// Validate maxLevel
+	validLevels := map[string]int{"N5": 5, "N4": 4, "N3": 3, "N2": 2, "N1": 1}
+	if _, valid := validLevels[maxLevel]; !valid {
+		maxLevel = "N5" // Default to N5 if invalid
+	}
+
+	// Get challenges for the form up to maxLevel
+	challenges, err := s.conjRepo.GetChallengesByFormUpToLevel(targetForm, maxLevel, 10)
 	if err != nil {
 		return nil, err
 	}
