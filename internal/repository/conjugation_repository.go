@@ -78,6 +78,62 @@ func (r *ConjugationRepository) GetChallengesByForm(formType, jlptLevel string, 
 	return challenges, rows.Err()
 }
 
+// GetChallengesByFormUpToLevel retrieves challenges for a form up to a max JLPT level
+// maxLevel: N5 (easiest), N4, N3, N2, N1 (hardest) - includes all levels <= maxLevel
+func (r *ConjugationRepository) GetChallengesByFormUpToLevel(formType, maxLevel string, limit int) ([]*models.ConjugationChallenge, error) {
+	if limit < 1 || limit > 50 {
+		limit = 20
+	}
+
+	// Map level to numeric for comparison
+	levelOrder := map[string]int{"N5": 5, "N4": 4, "N3": 3, "N2": 2, "N1": 1}
+	maxLevelNum := levelOrder[maxLevel]
+	if maxLevelNum == 0 {
+		maxLevelNum = 5 // Default to N5
+	}
+
+	// SQLite doesn't have array contains, so we use CASE for level comparison
+	query := `
+		SELECT id, base_form, reading, "group", target_form, target_ending,
+		       full_answer, hint, difficulty, jlpt_level, category, created_at
+		FROM conjugation_challenges
+		WHERE target_form = $1 
+		  AND CASE jlpt_level 
+		    WHEN 'N5' THEN 5 
+		    WHEN 'N4' THEN 4 
+		    WHEN 'N3' THEN 3 
+		    WHEN 'N2' THEN 2 
+		    WHEN 'N1' THEN 1 
+		    ELSE 5 
+		  END >= $2
+		ORDER BY RANDOM()
+		LIMIT $3
+	`
+
+	rows, err := r.db.Query(query, formType, maxLevelNum, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var challenges []*models.ConjugationChallenge
+	for rows.Next() {
+		c := &models.ConjugationChallenge{}
+		err := rows.Scan(
+			&c.ID, &c.BaseForm, &c.Reading, &c.Group,
+			&c.TargetForm, &c.TargetEnding, &c.FullAnswer,
+			&c.Hint, &c.Difficulty, &c.JLPTLevel,
+			&c.Category, &c.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		challenges = append(challenges, c)
+	}
+
+	return challenges, rows.Err()
+}
+
 // GetWeakPointsByForm gets accuracy stats per form for a user
 func (r *ConjugationRepository) GetWeakPointsByForm(userID string) (map[string]map[string]interface{}, error) {
 	query := `
