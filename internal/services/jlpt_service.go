@@ -119,11 +119,18 @@ func (s *JLPTService) CompleteTest(sessionID string, finalAnswers map[string]int
 			if userAnswer >= 0 && userAnswer < len(q.Options) {
 				userAnswerText = q.Options[userAnswer]
 			}
+			
+			// Safely get correct answer with bounds checking
+			correctAnswer := "Unknown"
+			if q.CorrectIndex >= 0 && q.CorrectIndex < len(q.Options) {
+				correctAnswer = q.Options[q.CorrectIndex]
+			}
+			
 			reviewItems = append(reviewItems, models.ReviewItem{
 				QuestionNum:   q.QuestionNum,
 				Question:      q.Question,
 				YourAnswer:    userAnswerText,
-				CorrectAnswer: q.Options[q.CorrectIndex],
+				CorrectAnswer: correctAnswer,
 				Explanation:   q.Explanation,
 			})
 		}
