@@ -1,0 +1,15 @@
+[
+  {"id": "ach-streak-3", "name": "First Streak", "description": "Study 3 days in a row", "icon": "🔥", "category": "streak", "requirement_type": "streak_days", "requirement_value": 3},
+  {"id": "ach-streak-7", "name": "Week Warrior", "description": "Study 7 days in a row", "icon": "⚡", "category": "streak", "requirement_type": "streak_days", "requirement_value": 7},
+  {"id": "ach-streak-30", "name": "Monthly Master", "description": "Study 30 days in a row", "icon": "🌟", "category": "streak", "requirement_type": "streak_days", "requirement_value": 30},
+  {"id": "ach-vocab-50", "name": "Word Collector", "description": "Learn 50 vocabulary words", "icon": "📚", "category": "vocab", "requirement_type": "total_count", "requirement_value": 50},
+  {"id": "ach-vocab-100", "name": "Vocabulary Builder", "description": "Learn 100 vocabulary words", "icon": "📖", "category": "vocab", "requirement_type": "total_count", "requirement_value": 100},
+  {"id": "ach-vocab-500", "name": "Word Master", "description": "Learn 500 vocabulary words", "icon": "🏆", "category": "vocab", "requirement_type": "total_count", "requirement_value": 500},
+  {"id": "ach-grammar-10", "name": "Grammar Beginner", "description": "Study 10 grammar patterns", "icon": "✍️", "category": "grammar", "requirement_type": "total_count", "requirement_value": 10},
+  {"id": "ach-grammar-50", "name": "Grammar Scholar", "description": "Study 50 grammar patterns", "icon": "🎓", "category": "grammar", "requirement_type": "total_count", "requirement_value": 50},
+  {"id": "ach-conj-100", "name": "Conjugation Ninja", "description": "Complete 100 conjugation drills", "icon": "⚔️", "category": "conjugation", "requirement_type": "total_count", "requirement_value": 100},
+  {"id": "ach-conj-500", "name": "Grammar Sword", "description": "Complete 500 conjugation drills", "icon": "🗡️", "category": "conjugation", "requirement_type": "total_count", "requirement_value": 500},
+  {"id": "ach-reading-5", "name": "First Reader", "description": "Complete 5 reading exercises", "icon": "📰", "category": "reading", "requirement_type": "total_count", "requirement_value": 5},
+  {"id": "ach-kanji-10", "name": "Kanji Starter", "description": "Practice 10 kanji characters", "icon": "漢", "category": "kanji", "requirement_type": "total_count", "requirement_value": 10},
+  {"id": "ach-kanji-50", "name": "Kanji Artist", "description": "Practice 50 kanji characters", "icon": "🖌️", "category": "kanji", "requirement_type": "total_count", "requirement_value": 50}
+]

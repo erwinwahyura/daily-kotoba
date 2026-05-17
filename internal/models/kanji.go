@@ -33,15 +33,15 @@ type Point struct {
 
 // KanjiPracticeSession tracks writing practice
 type KanjiPracticeSession struct {
-	ID            string    `json:"id" db:"id"`
-	UserID        string    `json:"user_id" db:"user_id"`
-	KanjiID       string    `json:"kanji_id" db:"kanji_id"`
-	KanjiChar     string    `json:"kanji_char" db:"kanji_char"`
-	StartedAt     time.Time `json:"started_at" db:"started_at"`
+	ID            string     `json:"id" db:"id"`
+	UserID        string     `json:"user_id" db:"user_id"`
+	KanjiID       string     `json:"kanji_id" db:"kanji_id"`
+	KanjiChar     string     `json:"kanji_char" db:"kanji_char"`
+	StartedAt     time.Time  `json:"started_at" db:"started_at"`
 	CompletedAt   *time.Time `json:"completed_at,omitempty" db:"completed_at"`
-	UserStrokes   []UserStroke `json:"user_strokes" db:"user_strokes"` // JSON
-	Accuracy      float64   `json:"accuracy" db:"accuracy"`       // 0-100
-	Status        string    `json:"status" db:"status"`             // in_progress, completed
+	CurrentStroke int        `json:"current_stroke" db:"current_stroke"`
+	Accuracy      float64    `json:"accuracy" db:"accuracy"`
+	Status        string     `json:"status" db:"status"`
 }
 
 // UserStroke captures user's drawn stroke
@@ -56,7 +56,7 @@ type UserStroke struct {
 type KanjiCompareRequest struct {
 	SessionID   string      `json:"session_id" binding:"required"`
 	StrokeNum   int         `json:"stroke_num" binding:"required"`
-	UserPath    []Point     `json:"user_path" binding:"required"`
+	UserPath    []Point     `json:"path" binding:"required"`
 }
 
 // KanjiCompareResult for stroke feedback

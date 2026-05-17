@@ -202,3 +202,33 @@ func (r *GrammarRepository) BulkCreate(patterns []models.GrammarPattern) error {
 
 	return tx.Commit()
 }
+
+// Search finds grammar patterns matching query in pattern or meaning
+func (r *GrammarRepository) Search(query, level string, limit int) ([]models.GrammarPattern, error) {
+	like := "%" + query + "%"
+	args := []interface{}{like, like}
+	where := "(pattern LIKE " + r.db.Placeholder(1) + " OR meaning LIKE " + r.db.Placeholder(2) + ")"
+
+	if level != "" {
+		args = append(args, level)
+		where += " AND jlpt_level = " + r.db.Placeholder(len(args))
+	}
+	args = append(args, limit)
+	sql := "SELECT id, pattern, meaning, jlpt_level FROM grammar_patterns WHERE " + where + " ORDER BY jlpt_level, index_position LIMIT " + r.db.Placeholder(len(args))
+
+	rows, err := r.db.Query(sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.GrammarPattern
+	for rows.Next() {
+		var p models.GrammarPattern
+		if err := rows.Scan(&p.ID, &p.Pattern, &p.Meaning, &p.JLPTLevel); err != nil {
+			continue
+		}
+		results = append(results, p)
+	}
+	return results, rows.Err()
+}

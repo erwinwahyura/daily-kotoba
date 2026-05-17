@@ -191,3 +191,33 @@ func (r *VocabRepository) BulkCreate(vocabList []models.Vocabulary) error {
 
 	return tx.Commit()
 }
+
+// Search finds vocabulary matching query in word, reading, or meaning
+func (r *VocabRepository) Search(query, level string, limit int) ([]models.Vocabulary, error) {
+	like := "%" + query + "%"
+	args := []interface{}{like, like, like}
+	where := "(word LIKE " + r.db.Placeholder(1) + " OR reading LIKE " + r.db.Placeholder(2) + " OR short_meaning LIKE " + r.db.Placeholder(3) + ")"
+
+	if level != "" {
+		args = append(args, level)
+		where += " AND jlpt_level = " + r.db.Placeholder(len(args))
+	}
+	args = append(args, limit)
+	sql := "SELECT id, word, reading, short_meaning, jlpt_level FROM vocabulary WHERE " + where + " ORDER BY jlpt_level, index_position LIMIT " + r.db.Placeholder(len(args))
+
+	rows, err := r.db.Query(sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.Vocabulary
+	for rows.Next() {
+		var v models.Vocabulary
+		if err := rows.Scan(&v.ID, &v.Word, &v.Reading, &v.ShortMeaning, &v.JLPTLevel); err != nil {
+			continue
+		}
+		results = append(results, v)
+	}
+	return results, rows.Err()
+}

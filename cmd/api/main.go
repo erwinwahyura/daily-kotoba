@@ -89,6 +89,9 @@ func main() {
 	conjRepo := repository.NewConjugationRepository(wrappedDB)
 	ttsRepo := repository.NewTTSRepository(wrappedDB)
 	jlptRepo := repository.NewJLPTRepository(wrappedDB)
+	goalsRepo := repository.NewGoalsRepository(wrappedDB)
+	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
+	listeningRepo := repository.NewListeningRepository(wrappedDB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -99,6 +102,9 @@ func main() {
 	conjService := services.NewConjugationService(conjRepo)
 	ttsService := services.NewTTSService(ttsRepo)
 	jlptService := services.NewJLPTService(jlptRepo)
+	goalsService := services.NewGoalsService(goalsRepo, progressRepo)
+	kanjiService := services.NewKanjiService(kanjiRepo)
+	listeningService := services.NewListeningService(listeningRepo, ttsService)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -110,6 +116,9 @@ func main() {
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 	srsHandler := handlers.NewSRShandler(srsService)
 	conjHandler := handlers.NewConjugationHandler(conjService)
+	goalsHandler := handlers.NewGoalsHandler(goalsService)
+	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
+	listeningHandler := handlers.NewListeningHandler(listeningService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -163,6 +172,7 @@ func main() {
 			vocab := protected.Group("/vocab")
 			{
 				vocab.GET("/daily", vocabHandler.GetDailyWord)
+				vocab.GET("/search", vocabHandler.SearchVocab)
 				vocab.GET("/:id", vocabHandler.GetVocabByID)
 				vocab.POST("/:id/skip", vocabHandler.SkipWord)
 			}
@@ -181,10 +191,11 @@ func main() {
 			grammar := protected.Group("/grammar")
 			{
 				grammar.GET("/daily", grammarHandler.GetDailyPattern)
+				grammar.GET("/search", grammarHandler.SearchGrammar)
+				grammar.GET("/compare/pairs", grammarHandler.GetComparisonPairs)
+				grammar.GET("/compare/detail", grammarHandler.ComparePatterns)
 				grammar.GET("/:id", grammarHandler.GetPatternByID)
 				grammar.POST("/:id/skip", grammarHandler.SkipPattern)
-				grammar.GET("/compare/pairs", grammarHandler.GetComparisonPairs)   // Get comparison pairs
-				grammar.GET("/compare/detail", grammarHandler.ComparePatterns)        // Compare specific patterns
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
 
@@ -218,13 +229,43 @@ func main() {
 			// JLPT Mock Test routes
 			jlpt := protected.Group("/jlpt")
 			{
-				jlpt.GET("/levels", jlptHandler.GetLevels)             // Get JLPT level info
-				jlpt.GET("/tests/:level", jlptHandler.GetTests)        // Get tests for level
-				jlpt.POST("/start", jlptHandler.StartTest)             // Start a new test
-				jlpt.POST("/answer", jlptHandler.SubmitAnswer)         // Submit answer
-				jlpt.POST("/complete/:session_id", jlptHandler.CompleteTest) // Finish test
-				jlpt.GET("/progress/:session_id", jlptHandler.GetProgress)    // Get progress
-				jlpt.GET("/history", jlptHandler.GetHistory)           // Get test history
+				jlpt.GET("/levels", jlptHandler.GetLevels)
+				jlpt.GET("/tests/:level", jlptHandler.GetTests)
+				jlpt.POST("/start", jlptHandler.StartTest)
+				jlpt.POST("/answer", jlptHandler.SubmitAnswer)
+				jlpt.POST("/complete/:session_id", jlptHandler.CompleteTest)
+				jlpt.GET("/progress/:session_id", jlptHandler.GetProgress)
+				jlpt.GET("/history", jlptHandler.GetHistory)
+			}
+
+			// Goals, streaks & achievements
+			goals := protected.Group("/goals")
+			{
+				goals.GET("/daily", goalsHandler.GetDailyProgress)
+				goals.GET("/streak", goalsHandler.GetStreak)
+				goals.GET("/achievements", goalsHandler.GetUserAchievements)
+				goals.GET("/achievements/all", goalsHandler.GetAllAchievements)
+				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)
+				goals.GET("/settings", goalsHandler.GetSettings)
+				goals.PUT("/settings", goalsHandler.SaveSettings)
+				goals.POST("/progress", goalsHandler.RecordActivity)
+			}
+
+			// Kanji writing practice
+			kanji := protected.Group("/kanji")
+			{
+				kanji.GET("/character/:kanji", kanjiHandler.GetCharacter)
+				kanji.POST("/practice/start", kanjiHandler.StartPractice)
+				kanji.POST("/practice/compare", kanjiHandler.CompareStroke)
+			}
+
+			// Listening practice
+			listening := protected.Group("/listening")
+			{
+				listening.GET("/exercises/:level", listeningHandler.GetExercises)
+				listening.GET("/exercise/:id", listeningHandler.GetExercise)
+				listening.POST("/session/start", listeningHandler.StartSession)
+				listening.POST("/session/answer", listeningHandler.SubmitAnswer)
 			}
 		}
 	}

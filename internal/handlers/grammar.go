@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yourusername/kotoba-api/internal/middleware"
+	"github.com/yourusername/kotoba-api/internal/models"
 	"github.com/yourusername/kotoba-api/internal/services"
 	"github.com/yourusername/kotoba-api/internal/utils"
 )
@@ -146,4 +147,25 @@ func (h *GrammarHandler) ComparePatterns(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, 200, "Comparison retrieved successfully", comparison)
+}
+
+// SearchGrammar searches grammar patterns
+func (h *GrammarHandler) SearchGrammar(c *gin.Context) {
+	q := c.Query("q")
+	if len(q) < 1 {
+		utils.SendError(c, 400, "Query parameter 'q' is required", nil)
+		return
+	}
+	level := c.Query("level")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	results, err := h.grammarService.SearchGrammar(q, level, limit)
+	if err != nil {
+		utils.SendError(c, 500, "Search failed", err)
+		return
+	}
+	if results == nil {
+		results = []models.GrammarPattern{}
+	}
+	utils.SendSuccess(c, 200, "", gin.H{"results": results})
 }

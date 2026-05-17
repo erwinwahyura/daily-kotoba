@@ -1,0 +1,215 @@
+[
+  {
+    "id": "listen-n5-001",
+    "title": "Morning Routine",
+    "jlpt_level": "N5",
+    "difficulty": "easy",
+    "topic": "daily life",
+    "transcript": "毎朝、七時に起きます。シャワーを浴びて、朝ご飯を食べます。パンとコーヒーが好きです。八時に家を出て、電車で学校へ行きます。",
+    "translation": "Every morning, I wake up at seven. I take a shower and eat breakfast. I like bread and coffee. I leave home at eight and go to school by train.",
+    "duration_seconds": 45
+  },
+  {
+    "id": "listen-n5-q001",
+    "exercise_id": "listen-n5-001",
+    "question_num": 1,
+    "question": "何時に起きますか？",
+    "options": "[\"六時\", \"七時\", \"八時\", \"九時\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n5-q002",
+    "exercise_id": "listen-n5-001",
+    "question_num": 2,
+    "question": "朝ご飯は何ですか？",
+    "options": "[\"ご飯と味噌汁\", \"パンとコーヒー\", \"卵とジュース\", \"うどんとお茶\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n5-q003",
+    "exercise_id": "listen-n5-001",
+    "question_num": 3,
+    "question": "どうやって学校へ行きますか？",
+    "options": "[\"バスで\", \"自転車で\", \"歩いて\", \"電車で\"]",
+    "correct_index": 3
+  },
+  {
+    "id": "listen-n5-v001",
+    "exercise_id": "listen-n5-001",
+    "word": "毎朝",
+    "reading": "まいあさ",
+    "meaning": "every morning"
+  },
+  {
+    "id": "listen-n5-v002",
+    "exercise_id": "listen-n5-001",
+    "word": "起きます",
+    "reading": "おきます",
+    "meaning": "to wake up"
+  },
+  {
+    "id": "listen-n5-v003",
+    "exercise_id": "listen-n5-001",
+    "word": "シャワー",
+    "reading": "シャワー",
+    "meaning": "shower"
+  },
+  {
+    "id": "listen-n4-001",
+    "title": "Weekend Plans",
+    "jlpt_level": "N4",
+    "difficulty": "medium",
+    "topic": "hobbies",
+    "transcript": "今週末、友達と映画を見に行く予定です。見たい映画はアクション映画です。映画の後は、近くのレストランで夕食を食べます。来月は旅行に行くつもりです。",
+    "translation": "This weekend, I'm planning to go see a movie with a friend. The movie I want to see is an action movie. After the movie, we'll eat dinner at a nearby restaurant. Next month, I intend to go on a trip.",
+    "duration_seconds": 50
+  },
+  {
+    "id": "listen-n4-q001",
+    "exercise_id": "listen-n4-001",
+    "question_num": 1,
+    "question": "今週末、何をする予定ですか？",
+    "options": "[\"買い物をする\", \"映画を見に行く\", \"旅行に行く\", \"勉強する\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n4-q002",
+    "exercise_id": "listen-n4-001",
+    "question_num": 2,
+    "question": "映画の後、何をしますか？",
+    "options": "[\"公園を散歩する\", \"家に帰る\", \"レストランで食事する\", \"カラオケに行く\"]",
+    "correct_index": 2
+  },
+  {
+    "id": "listen-n4-q003",
+    "exercise_id": "listen-n4-001",
+    "question_num": 3,
+    "question": "来月の予定は何ですか？",
+    "options": "[\"映画鑑賞\", \"旅行\", \"料理教室\", \"スポーツ\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n4-v001",
+    "exercise_id": "listen-n4-001",
+    "word": "予定",
+    "reading": "よてい",
+    "meaning": "plan, schedule"
+  },
+  {
+    "id": "listen-n4-v002",
+    "exercise_id": "listen-n4-001",
+    "word": "つもり",
+    "reading": "つもり",
+    "meaning": "intention, plan"
+  },
+  {
+    "id": "listen-n3-001",
+    "title": "Technology in Daily Life",
+    "jlpt_level": "N3",
+    "difficulty": "medium",
+    "topic": "technology",
+    "transcript": "最近、スマートフォンの普及により、私たちの生活が大きく変わりました。地図アプリのおかげで、知らない場所にも迷わず行けるようになりました。しかし、スマートフォンに依存しすぎることで、人との直接的なコミュニケーションが減っているという問題もあります。",
+    "translation": "Recently, due to the spread of smartphones, our lives have changed significantly. Thanks to map apps, we can now go to unfamiliar places without getting lost. However, there is also the problem that over-reliance on smartphones is reducing direct communication with people.",
+    "duration_seconds": 65
+  },
+  {
+    "id": "listen-n3-q001",
+    "exercise_id": "listen-n3-001",
+    "question_num": 1,
+    "question": "スマートフォンの普及で何が変わりましたか？",
+    "options": "[\"気候\", \"私たちの生活\", \"食文化\", \"交通機関\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n3-q002",
+    "exercise_id": "listen-n3-001",
+    "question_num": 2,
+    "question": "地図アプリのおかげで何ができるようになりましたか？",
+    "options": "[\"料理ができる\", \"外国語が話せる\", \"知らない場所に行ける\", \"映画が見られる\"]",
+    "correct_index": 2
+  },
+  {
+    "id": "listen-n3-q003",
+    "exercise_id": "listen-n3-001",
+    "question_num": 3,
+    "question": "スマートフォンへの依存が引き起こす問題は何ですか？",
+    "options": "[\"電池が減る\", \"直接的なコミュニケーションの減少\", \"画面が割れる\", \"通信料が高くなる\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n3-v001",
+    "exercise_id": "listen-n3-001",
+    "word": "普及",
+    "reading": "ふきゅう",
+    "meaning": "spread, popularization"
+  },
+  {
+    "id": "listen-n3-v002",
+    "exercise_id": "listen-n3-001",
+    "word": "依存",
+    "reading": "いぞん",
+    "meaning": "dependence, reliance"
+  },
+  {
+    "id": "listen-n3-v003",
+    "exercise_id": "listen-n3-001",
+    "word": "直接的",
+    "reading": "ちょくせつてき",
+    "meaning": "direct"
+  },
+  {
+    "id": "listen-n2-001",
+    "title": "Environmental Issues",
+    "jlpt_level": "N2",
+    "difficulty": "hard",
+    "topic": "environment",
+    "transcript": "地球温暖化は現代社会が直面している最も深刻な環境問題の一つです。産業革命以降、化石燃料の大量消費により、大気中の二酸化炭素濃度が急激に上昇しました。この問題に対処するために、各国政府や企業が再生可能エネルギーへの移行を進めています。しかし、経済発展と環境保護のバランスをとることは依然として困難な課題です。",
+    "translation": "Global warming is one of the most serious environmental issues facing modern society. Since the Industrial Revolution, massive consumption of fossil fuels has caused a rapid rise in atmospheric CO2 concentrations. To address this problem, governments and companies around the world are pushing for a transition to renewable energy. However, balancing economic development with environmental protection remains a difficult challenge.",
+    "duration_seconds": 80
+  },
+  {
+    "id": "listen-n2-q001",
+    "exercise_id": "listen-n2-001",
+    "question_num": 1,
+    "question": "地球温暖化の主な原因は何ですか？",
+    "options": "[\"農業の発展\", \"化石燃料の大量消費\", \"人口増加\", \"都市化\"]",
+    "correct_index": 1
+  },
+  {
+    "id": "listen-n2-q002",
+    "exercise_id": "listen-n2-001",
+    "question_num": 2,
+    "question": "問題に対処するための取り組みは何ですか？",
+    "options": "[\"石炭の使用増加\", \"核エネルギーの推進\", \"再生可能エネルギーへの移行\", \"原油の輸出制限\"]",
+    "correct_index": 2
+  },
+  {
+    "id": "listen-n2-q003",
+    "exercise_id": "listen-n2-001",
+    "question_num": 3,
+    "question": "現在も困難な課題として挙げられているのは何ですか？",
+    "options": "[\"技術開発\", \"人材育成\", \"経済発展と環境保護のバランス\", \"国際条約の締結\"]",
+    "correct_index": 2
+  },
+  {
+    "id": "listen-n2-v001",
+    "exercise_id": "listen-n2-001",
+    "word": "温暖化",
+    "reading": "おんだんか",
+    "meaning": "global warming"
+  },
+  {
+    "id": "listen-n2-v002",
+    "exercise_id": "listen-n2-001",
+    "word": "化石燃料",
+    "reading": "かせきねんりょう",
+    "meaning": "fossil fuels"
+  },
+  {
+    "id": "listen-n2-v003",
+    "exercise_id": "listen-n2-001",
+    "word": "再生可能エネルギー",
+    "reading": "さいせいかのうエネルギー",
+    "meaning": "renewable energy"
+  }
+]

@@ -78,6 +78,26 @@ func (h *VocabularyHandler) SkipWord(c *gin.Context) {
 	utils.SendSuccess(c, 200, "Moved to next word successfully", nextVocab)
 }
 
+func (h *VocabularyHandler) SearchVocab(c *gin.Context) {
+	q := c.Query("q")
+	if len(q) < 1 {
+		utils.SendError(c, 400, "Query parameter 'q' is required", nil)
+		return
+	}
+	level := c.Query("level")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	results, err := h.vocabService.SearchVocab(q, level, limit)
+	if err != nil {
+		utils.SendError(c, 500, "Search failed", err)
+		return
+	}
+	if results == nil {
+		results = []models.Vocabulary{}
+	}
+	utils.SendSuccess(c, 200, "", gin.H{"results": results})
+}
+
 func (h *VocabularyHandler) GetVocabularyByLevel(c *gin.Context) {
 	level := c.Param("level")
 	if level == "" {

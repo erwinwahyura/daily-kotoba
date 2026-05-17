@@ -369,6 +369,12 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedConjugation(path)
 		} else if strings.Contains(name, "jlpt") {
 			count, err = db.SeedJLPT(path)
+		} else if strings.Contains(name, "achievement") {
+			count, err = db.SeedAchievements(path)
+		} else if strings.Contains(name, "kanji") {
+			count, err = db.SeedKanji(path)
+		} else if strings.Contains(name, "listening") {
+			count, err = db.SeedListening(path)
 		} else {
 			// Unknown type, try generic approach
 			log.Printf("Unknown seed type for %s, skipping", name)
@@ -495,6 +501,127 @@ func (db *DB) SeedJLPT(seedFile string) (int, error) {
 		return count, err
 	}
 
+	return count, nil
+}
+
+// SeedAchievements inserts achievement definitions from seed file
+func (db *DB) SeedAchievements(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	p := func(n int) string { return db.Placeholder(n) }
+	count := 0
+	for _, record := range seedData.Records {
+		query := "INSERT OR IGNORE INTO achievements (id, name, description, icon, category, requirement_type, requirement_value) VALUES (" +
+			p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ", " + p(7) + ")"
+		_, insertErr := db.Exec(query,
+			record["id"], record["name"], record["description"], record["icon"],
+			record["category"], record["requirement_type"], record["requirement_value"],
+		)
+		if insertErr == nil {
+			count++
+		}
+	}
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	_ = db.MarkSeedApplied(seedData.Name, checksum, count)
+	return count, nil
+}
+
+// SeedKanji inserts kanji characters from seed file
+func (db *DB) SeedKanji(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	p := func(n int) string { return db.Placeholder(n) }
+	count := 0
+	for _, record := range seedData.Records {
+		query := "INSERT OR IGNORE INTO kanji_characters (id, character, jlpt_level, meaning, readings, stroke_count, stroke_order) VALUES (" +
+			p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ", " + p(7) + ")"
+		_, insertErr := db.Exec(query,
+			record["id"], record["character"], record["jlpt_level"], record["meaning"],
+			record["readings"], record["stroke_count"], record["stroke_order"],
+		)
+		if insertErr == nil {
+			count++
+		}
+	}
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	_ = db.MarkSeedApplied(seedData.Name, checksum, count)
+	return count, nil
+}
+
+// SeedListening inserts listening exercises, questions, and vocabulary from seed file
+func (db *DB) SeedListening(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	p := func(n int) string { return db.Placeholder(n) }
+	count := 0
+	for _, record := range seedData.Records {
+		_, hasExerciseID := record["exercise_id"]
+		_, hasQuestionNum := record["question_num"]
+		_, hasWord := record["word"]
+
+		if hasExerciseID && hasQuestionNum {
+			query := "INSERT OR IGNORE INTO listening_questions (id, exercise_id, question_num, question, options, correct_index) VALUES (" +
+				p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ")"
+			_, insertErr := db.Exec(query,
+				record["id"], record["exercise_id"], record["question_num"],
+				record["question"], record["options"], record["correct_index"],
+			)
+			if insertErr == nil {
+				count++
+			}
+		} else if hasExerciseID && hasWord {
+			query := "INSERT OR IGNORE INTO listening_vocabulary (id, exercise_id, word, reading, meaning) VALUES (" +
+				p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ")"
+			_, insertErr := db.Exec(query,
+				record["id"], record["exercise_id"], record["word"], record["reading"], record["meaning"],
+			)
+			if insertErr == nil {
+				count++
+			}
+		} else {
+			query := "INSERT OR IGNORE INTO listening_exercises (id, title, jlpt_level, difficulty, topic, transcript, translation, duration_seconds) VALUES (" +
+				p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ", " + p(7) + ", " + p(8) + ")"
+			_, insertErr := db.Exec(query,
+				record["id"], record["title"], record["jlpt_level"], record["difficulty"],
+				record["topic"], record["transcript"], record["translation"], record["duration_seconds"],
+			)
+			if insertErr == nil {
+				count++
+			}
+		}
+	}
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	_ = db.MarkSeedApplied(seedData.Name, checksum, count)
 	return count, nil
 }
 

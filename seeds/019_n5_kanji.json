@@ -1,0 +1,137 @@
+[
+  {
+    "id": "kanji-n5-001",
+    "character": "日",
+    "jlpt_level": "N5",
+    "meaning": "sun, day",
+    "readings": "[\"にち\", \"じつ\", \"ひ\", \"か\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.2},\"end_point\":{\"x\":0.8,\"y\":0.2}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.2,\"y\":0.2},\"end_point\":{\"x\":0.2,\"y\":0.8}},{\"stroke_num\":3,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.5},\"end_point\":{\"x\":0.8,\"y\":0.5}},{\"stroke_num\":4,\"direction\":\"vertical\",\"start_point\":{\"x\":0.8,\"y\":0.2},\"end_point\":{\"x\":0.8,\"y\":0.8}}]"
+  },
+  {
+    "id": "kanji-n5-002",
+    "character": "月",
+    "jlpt_level": "N5",
+    "meaning": "moon, month",
+    "readings": "[\"げつ\", \"がつ\", \"つき\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.3,\"y\":0.1},\"end_point\":{\"x\":0.2,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"curve\",\"start_point\":{\"x\":0.3,\"y\":0.1},\"end_point\":{\"x\":0.8,\"y\":0.5}},{\"stroke_num\":3,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.25,\"y\":0.4},\"end_point\":{\"x\":0.75,\"y\":0.4}},{\"stroke_num\":4,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.25,\"y\":0.65},\"end_point\":{\"x\":0.75,\"y\":0.65}}]"
+  },
+  {
+    "id": "kanji-n5-003",
+    "character": "山",
+    "jlpt_level": "N5",
+    "meaning": "mountain",
+    "readings": "[\"さん\", \"やま\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.2,\"y\":0.4},\"end_point\":{\"x\":0.2,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"vertical\",\"start_point\":{\"x\":0.8,\"y\":0.4},\"end_point\":{\"x\":0.8,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-004",
+    "character": "川",
+    "jlpt_level": "N5",
+    "meaning": "river",
+    "readings": "[\"せん\", \"かわ\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.2,\"y\":0.2},\"end_point\":{\"x\":0.2,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"vertical\",\"start_point\":{\"x\":0.8,\"y\":0.2},\"end_point\":{\"x\":0.8,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-005",
+    "character": "木",
+    "jlpt_level": "N5",
+    "meaning": "tree, wood",
+    "readings": "[\"もく\", \"ぼく\", \"き\", \"こ\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.1,\"y\":0.4},\"end_point\":{\"x\":0.9,\"y\":0.4}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.6},\"end_point\":{\"x\":0.2,\"y\":0.9}},{\"stroke_num\":4,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.6},\"end_point\":{\"x\":0.8,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-006",
+    "character": "火",
+    "jlpt_level": "N5",
+    "meaning": "fire",
+    "readings": "[\"か\", \"ひ\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.6}},{\"stroke_num\":2,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.35,\"y\":0.35},\"end_point\":{\"x\":0.1,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.4},\"end_point\":{\"x\":0.4,\"y\":0.9}},{\"stroke_num\":4,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.4},\"end_point\":{\"x\":0.85,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-007",
+    "character": "水",
+    "jlpt_level": "N5",
+    "meaning": "water",
+    "readings": "[\"すい\", \"みず\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.35,\"y\":0.35},\"end_point\":{\"x\":0.1,\"y\":0.7}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.45},\"end_point\":{\"x\":0.35,\"y\":0.9}},{\"stroke_num\":4,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.45},\"end_point\":{\"x\":0.9,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-008",
+    "character": "土",
+    "jlpt_level": "N5",
+    "meaning": "earth, soil",
+    "readings": "[\"ど\", \"と\", \"つち\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.35},\"end_point\":{\"x\":0.8,\"y\":0.35}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.1,\"y\":0.9},\"end_point\":{\"x\":0.9,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-009",
+    "character": "人",
+    "jlpt_level": "N5",
+    "meaning": "person",
+    "readings": "[\"じん\", \"にん\", \"ひと\"]",
+    "stroke_count": 2,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.2,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.8,\"y\":0.7}}]"
+  },
+  {
+    "id": "kanji-n5-010",
+    "character": "大",
+    "jlpt_level": "N5",
+    "meaning": "big, large",
+    "readings": "[\"だい\", \"たい\", \"おお\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.1,\"y\":0.4},\"end_point\":{\"x\":0.9,\"y\":0.4}},{\"stroke_num\":2,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.15,\"y\":0.9}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.4},\"end_point\":{\"x\":0.9,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-011",
+    "character": "小",
+    "jlpt_level": "N5",
+    "meaning": "small, little",
+    "readings": "[\"しょう\", \"ちい\", \"こ\", \"お\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.3,\"y\":0.35},\"end_point\":{\"x\":0.2,\"y\":0.65}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.7,\"y\":0.35},\"end_point\":{\"x\":0.8,\"y\":0.65}}]"
+  },
+  {
+    "id": "kanji-n5-012",
+    "character": "上",
+    "jlpt_level": "N5",
+    "meaning": "above, up",
+    "readings": "[\"じょう\", \"うえ\", \"あ\", \"のぼ\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.3},\"end_point\":{\"x\":0.5,\"y\":0.9}},{\"stroke_num\":2,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.6},\"end_point\":{\"x\":0.8,\"y\":0.6}},{\"stroke_num\":3,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.3,\"y\":0.9},\"end_point\":{\"x\":0.7,\"y\":0.9}}]"
+  },
+  {
+    "id": "kanji-n5-013",
+    "character": "下",
+    "jlpt_level": "N5",
+    "meaning": "below, down",
+    "readings": "[\"か\", \"げ\", \"した\", \"さ\", \"くだ\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.1,\"y\":0.2},\"end_point\":{\"x\":0.9,\"y\":0.2}},{\"stroke_num\":2,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.2},\"end_point\":{\"x\":0.5,\"y\":0.8}},{\"stroke_num\":3,\"direction\":\"diagonal\",\"start_point\":{\"x\":0.5,\"y\":0.8},\"end_point\":{\"x\":0.35,\"y\":0.95}}]"
+  },
+  {
+    "id": "kanji-n5-014",
+    "character": "口",
+    "jlpt_level": "N5",
+    "meaning": "mouth",
+    "readings": "[\"こう\", \"く\", \"くち\"]",
+    "stroke_count": 3,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.2,\"y\":0.2},\"end_point\":{\"x\":0.2,\"y\":0.8}},{\"stroke_num\":2,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.8},\"end_point\":{\"x\":0.8,\"y\":0.8}},{\"stroke_num\":3,\"direction\":\"vertical\",\"start_point\":{\"x\":0.8,\"y\":0.2},\"end_point\":{\"x\":0.8,\"y\":0.8}}]"
+  },
+  {
+    "id": "kanji-n5-015",
+    "character": "中",
+    "jlpt_level": "N5",
+    "meaning": "middle, inside",
+    "readings": "[\"ちゅう\", \"なか\"]",
+    "stroke_count": 4,
+    "stroke_order": "[{\"stroke_num\":1,\"direction\":\"vertical\",\"start_point\":{\"x\":0.2,\"y\":0.2},\"end_point\":{\"x\":0.2,\"y\":0.8}},{\"stroke_num\":2,\"direction\":\"horizontal\",\"start_point\":{\"x\":0.2,\"y\":0.8},\"end_point\":{\"x\":0.8,\"y\":0.8}},{\"stroke_num\":3,\"direction\":\"vertical\",\"start_point\":{\"x\":0.8,\"y\":0.2},\"end_point\":{\"x\":0.8,\"y\":0.8}},{\"stroke_num\":4,\"direction\":\"vertical\",\"start_point\":{\"x\":0.5,\"y\":0.1},\"end_point\":{\"x\":0.5,\"y\":0.9}}]"
+  }
+]
