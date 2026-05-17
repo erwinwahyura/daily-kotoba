@@ -3,173 +3,245 @@ package services
 import (
 	"fmt"
 	"math"
+	"time"
 
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
+	"github.com/google/uuid"
 )
 
+// KanjiService handles kanji writing practice business logic
 type KanjiService struct {
 	kanjiRepo *repository.KanjiRepository
 }
 
+// NewKanjiService creates a new service
 func NewKanjiService(kanjiRepo *repository.KanjiRepository) *KanjiService {
-	return &KanjiService{kanjiRepo: kanjiRepo}
+	return &KanjiService{
+		kanjiRepo: kanjiRepo,
+	}
 }
 
-func (s *KanjiService) GetCharacter(char string) (*models.Kanji, error) {
-	k, err := s.kanjiRepo.GetByCharacter(char)
+// GetKanjiByCharacter retrieves kanji details
+func (s *KanjiService) GetKanjiByCharacter(char string) (*models.Kanji, error) {
+	return s.kanjiRepo.GetKanjiByCharacter(char)
+}
+
+// GetKanjiByLevel retrieves kanji for a JLPT level
+func (s *KanjiService) GetKanjiByLevel(level string, limit int) (*models.KanjiListResponse, error) {
+	kanji, err := s.kanjiRepo.GetKanjiByLevel(level, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.KanjiListResponse{
+		Kanji:      kanji,
+		TotalCount: len(kanji),
+		Level:      level,
+	}, nil
+}
+
+// StartPracticeSession creates a new practice session
+func (s *KanjiService) StartPracticeSession(userID, kanjiChar string) (*models.KanjiPracticeSession, error) {
+	// Get kanji details
+	kanji, err := s.kanjiRepo.GetKanjiByCharacter(kanjiChar)
+	if err != nil {
+		return nil, err
+	}
+
+	session := &models.KanjiPracticeSession{
+		ID:        uuid.New().String(),
+		UserID:    userID,
+		KanjiID:   kanji.ID,
+		KanjiChar: kanji.Character,
+		StartedAt: time.Now(),
+		Status:    "in_progress",
+		Accuracy:  0,
+		UserStrokes: []models.UserStroke{},
+	}
+
+	if err := s.kanjiRepo.CreatePracticeSession(session); err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+
+	return session, nil
+}
+
+// CompareStroke compares user's stroke with reference and returns accuracy
+func (s *KanjiService) CompareStroke(sessionID string, strokeNum int, userPath []models.Point) (*models.KanjiCompareResult, error) {
+	// Get session
+	session, err := s.kanjiRepo.GetPracticeSession(sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("session not found: %w", err)
+	}
+
+	// Get kanji reference
+	kanji, err := s.kanjiRepo.GetKanjiByCharacter(session.KanjiChar)
 	if err != nil {
 		return nil, fmt.Errorf("kanji not found: %w", err)
-	}
-	return k, nil
-}
-
-func (s *KanjiService) StartSession(userID, kanjiChar string) (*models.KanjiPracticeSession, error) {
-	k, err := s.kanjiRepo.GetByCharacter(kanjiChar)
-	if err != nil {
-		return nil, fmt.Errorf("kanji not found")
-	}
-	return s.kanjiRepo.CreateSession(userID, k.ID, kanjiChar)
-}
-
-// CompareStroke compares user's drawn stroke against the reference stroke.
-// Returns accuracy (0-100) and feedback message.
-func (s *KanjiService) CompareStroke(sessionID string, strokeNum int, userPath []models.Point) (*models.KanjiCompareResult, error) {
-	session, err := s.kanjiRepo.GetSession(sessionID)
-	if err != nil || session == nil {
-		return nil, fmt.Errorf("session not found")
-	}
-
-	kanji, err := s.kanjiRepo.GetByCharacter(session.KanjiChar)
-	if err != nil || kanji == nil {
-		return nil, fmt.Errorf("kanji not found")
 	}
 
 	// Find reference stroke
 	var refStroke *models.Stroke
-	for i := range kanji.StrokeOrder {
-		if kanji.StrokeOrder[i].StrokeNum == strokeNum {
-			refStroke = &kanji.StrokeOrder[i]
+	for _, s := range kanji.StrokeOrder {
+		if s.StrokeNum == strokeNum {
+			refStroke = &s
 			break
 		}
 	}
+
 	if refStroke == nil {
-		// No reference data — give benefit of the doubt
-		return &models.KanjiCompareResult{
-			Accuracy: 75, Feedback: "Keep practicing!", Direction: "unknown", OrderCorrect: true,
-		}, nil
+		return nil, fmt.Errorf("stroke %d not found for kanji %s", strokeNum, kanji.Character)
 	}
 
-	accuracy := compareStrokePaths(userPath, *refStroke)
+	// Check if correct stroke order
+	orderCorrect := strokeNum == len(session.UserStrokes)+1
 
-	var feedback string
-	var directionOK string
-	switch {
-	case accuracy >= 85:
-		feedback = "Excellent! Perfect stroke."
-		directionOK = "correct"
-	case accuracy >= 70:
-		feedback = "Good! Keep practicing."
-		directionOK = "correct"
-	case accuracy >= 50:
-		feedback = "Almost there. Check stroke direction."
-		directionOK = "wrong_direction"
-	default:
-		feedback = "Try again. Follow the guide carefully."
-		directionOK = "wrong_direction"
+	// Calculate accuracy using path comparison
+	accuracy := s.calculateStrokeAccuracy(refStroke, userPath)
+
+	// Generate feedback
+	feedback := s.generateFeedback(accuracy, refStroke.Direction)
+
+	// Record user's stroke
+	userStroke := models.UserStroke{
+		StrokeNum: strokeNum,
+		Path:      userPath,
+		Timestamp: time.Now(),
+	}
+	if len(userPath) >= 2 {
+		// Estimate duration based on path length (simplified)
+		userStroke.Duration = len(userPath) * 10
 	}
 
-	// Update session accuracy (running average)
-	newAccuracy := (session.Accuracy*float64(strokeNum-1) + accuracy) / float64(strokeNum)
-	_ = s.kanjiRepo.UpdateSessionAccuracy(sessionID, newAccuracy, strokeNum)
+	session.UserStrokes = append(session.UserStrokes, userStroke)
+
+	// Update overall accuracy
+	if len(session.UserStrokes) > 0 {
+		totalAccuracy := 0.0
+		for _, us := range session.UserStrokes {
+			// Recalculate accuracy for each stroke
+			for _, ref := range kanji.StrokeOrder {
+				if ref.StrokeNum == us.StrokeNum {
+					totalAccuracy += s.calculateStrokeAccuracy(&ref, us.Path)
+					break
+				}
+			}
+		}
+		session.Accuracy = totalAccuracy / float64(len(session.UserStrokes))
+	}
+
+	// Check if completed
+	if len(session.UserStrokes) >= kanji.StrokeCount {
+		session.Status = "completed"
+		now := time.Now()
+		session.CompletedAt = &now
+	}
+
+	// Save session
+	if err := s.kanjiRepo.UpdatePracticeSession(session); err != nil {
+		return nil, fmt.Errorf("failed to update session: %w", err)
+	}
 
 	return &models.KanjiCompareResult{
 		Accuracy:     accuracy,
 		Feedback:     feedback,
-		Direction:    directionOK,
-		OrderCorrect: strokeNum == session.CurrentStroke+1,
+		Direction:    refStroke.Direction,
+		OrderCorrect: orderCorrect,
 	}, nil
 }
 
-// compareStrokePaths computes a 0-100 similarity between user path and reference stroke.
-// Uses direction match + start/end proximity as a simple heuristic.
-func compareStrokePaths(userPath []models.Point, ref models.Stroke) float64 {
+// calculateStrokeAccuracy compares user path with reference stroke
+func (s *KanjiService) calculateStrokeAccuracy(ref *models.Stroke, userPath []models.Point) float64 {
 	if len(userPath) < 2 {
-		return 0
+		return 0.0
 	}
 
-	// Normalize user path to 0-1 coordinate space (assuming canvas 300x300)
-	norm := normalizePoints(userPath)
+	// Simplified stroke comparison algorithm
+	// 1. Check direction similarity
+	// 2. Check start/end point proximity
+	// 3. Check overall path shape
 
-	// Score based on start proximity
-	startDist := dist(norm[0], ref.StartPoint)
-	endDist := dist(norm[len(norm)-1], ref.EndPoint)
+	// Get user stroke direction vector
+	userStart := userPath[0]
+	userEnd := userPath[len(userPath)-1]
+	userDx := userEnd.X - userStart.X
+	userDy := userEnd.Y - userStart.Y
+	userLength := math.Sqrt(userDx*userDx + userDy*userDy)
 
-	// Direction match: compute overall direction vector of user stroke
-	userDir := dirVector(norm[0], norm[len(norm)-1])
-	refDir := dirVector(ref.StartPoint, ref.EndPoint)
-	dirSimilarity := dotProduct(userDir, refDir) // -1 to 1
+	// Get reference direction vector
+	refDx := ref.EndPoint.X - ref.StartPoint.X
+	refDy := ref.EndPoint.Y - ref.StartPoint.Y
+	refLength := math.Sqrt(refDx*refDx + refDy*refDy)
 
-	// Combine: start proximity (0-1), end proximity (0-1), direction (-1 to 1)
-	startScore := math.Max(0, 1-startDist*3)
-	endScore := math.Max(0, 1-endDist*3)
-	dirScore := (dirSimilarity + 1) / 2 // 0 to 1
+	if userLength == 0 || refLength == 0 {
+		return 50.0 // Neutral if no movement
+	}
 
-	accuracy := (startScore*0.3 + endScore*0.3 + dirScore*0.4) * 100
-	return math.Round(accuracy)
+	// Normalize vectors
+	userDx /= userLength
+	userDy /= userLength
+	refDx /= refLength
+	refDy /= refLength
+
+	// Calculate direction similarity (dot product)
+	dotProduct := userDx*refDx + userDy*refDy
+	directionScore := (dotProduct + 1) / 2 * 100 // Convert to 0-100
+
+	// Calculate start point proximity (normalized to 100x100 canvas)
+	startDist := math.Sqrt(
+		math.Pow(userStart.X-ref.StartPoint.X, 2) +
+		math.Pow(userStart.Y-ref.StartPoint.Y, 2),
+	)
+	startScore := math.Max(0, 100-startDist)
+
+	// Calculate end point proximity
+	endDist := math.Sqrt(
+		math.Pow(userEnd.X-ref.EndPoint.X, 2) +
+		math.Pow(userEnd.Y-ref.EndPoint.Y, 2),
+	)
+	endScore := math.Max(0, 100-endDist)
+
+	// Calculate length ratio
+	lengthRatio := math.Min(userLength, refLength) / math.Max(userLength, refLength)
+	lengthScore := lengthRatio * 100
+
+	// Weighted average
+	accuracy := directionScore*0.5 + startScore*0.2 + endScore*0.2 + lengthScore*0.1
+
+	// Clamp to 0-100
+	return math.Min(100, math.Max(0, accuracy))
 }
 
-func normalizePoints(pts []models.Point) []models.Point {
-	if len(pts) == 0 {
-		return pts
+// generateFeedback creates helpful feedback based on accuracy
+func (s *KanjiService) generateFeedback(accuracy float64, direction string) string {
+	switch {
+	case accuracy >= 90:
+		return "Excellent! Perfect stroke."
+	case accuracy >= 80:
+		return "Great job! Very close."
+	case accuracy >= 70:
+		return "Good! Try to make it " + direction + "."
+	case accuracy >= 60:
+		return "Getting there. Watch the " + direction + " direction."
+	case accuracy >= 50:
+		return "Keep practicing. Focus on the stroke direction."
+	default:
+		return "Try again. Follow the guide line."
 	}
-	minX, minY := pts[0].X, pts[0].Y
-	maxX, maxY := pts[0].X, pts[0].Y
-	for _, p := range pts {
-		if p.X < minX {
-			minX = p.X
-		}
-		if p.X > maxX {
-			maxX = p.X
-		}
-		if p.Y < minY {
-			minY = p.Y
-		}
-		if p.Y > maxY {
-			maxY = p.Y
-		}
-	}
-	rangeX := maxX - minX
-	rangeY := maxY - minY
-	if rangeX == 0 {
-		rangeX = 1
-	}
-	if rangeY == 0 {
-		rangeY = 1
-	}
-	norm := make([]models.Point, len(pts))
-	for i, p := range pts {
-		norm[i] = models.Point{X: (p.X - minX) / rangeX, Y: (p.Y - minY) / rangeY}
-	}
-	return norm
 }
 
-func dist(a, b models.Point) float64 {
-	dx := a.X - b.X
-	dy := a.Y - b.Y
-	return math.Sqrt(dx*dx + dy*dy)
+// GetPracticeSession retrieves session details
+func (s *KanjiService) GetPracticeSession(sessionID string) (*models.KanjiPracticeSession, error) {
+	return s.kanjiRepo.GetPracticeSession(sessionID)
 }
 
-func dirVector(start, end models.Point) models.Point {
-	dx := end.X - start.X
-	dy := end.Y - start.Y
-	mag := math.Sqrt(dx*dx + dy*dy)
-	if mag == 0 {
-		return models.Point{X: 0, Y: 0}
-	}
-	return models.Point{X: dx / mag, Y: dy / mag}
+// GetUserStats gets user's kanji practice statistics
+func (s *KanjiService) GetUserStats(userID string) (map[string]interface{}, error) {
+	return s.kanjiRepo.GetUserKanjiStats(userID)
 }
 
-func dotProduct(a, b models.Point) float64 {
-	return a.X*b.X + a.Y*b.Y
+// SeedKanjiData seeds initial kanji data
+func (s *KanjiService) SeedKanjiData() error {
+	return s.kanjiRepo.SeedSampleKanji()
 }

@@ -2,178 +2,230 @@ package services
 
 import (
 	"fmt"
+	"math"
 	"time"
 
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
 )
 
+// GoalsService handles daily goals, streaks, and achievements
 type GoalsService struct {
-	goalsRepo    *repository.GoalsRepository
-	progressRepo *repository.ProgressRepository
+	goalsRepo *repository.GoalsRepository
 }
 
-func NewGoalsService(goalsRepo *repository.GoalsRepository, progressRepo *repository.ProgressRepository) *GoalsService {
-	return &GoalsService{goalsRepo: goalsRepo, progressRepo: progressRepo}
+// NewGoalsService creates a new service
+func NewGoalsService(goalsRepo *repository.GoalsRepository) *GoalsService {
+	return &GoalsService{
+		goalsRepo: goalsRepo,
+	}
 }
 
-func (s *GoalsService) GetDailyProgress(userID string) (*models.DailyProgressResponse, error) {
-	settings, err := s.goalsRepo.GetOrCreateSettings(userID)
+// GetDailyProgress gets today's progress summary
+func (s *GoalsService) GetDailyProgress(userID string) (*models.DailyProgress, error) {
+	// Get or create today's goal
+	goal, err := s.goalsRepo.GetOrCreateDailyGoal(userID, time.Now())
 	if err != nil {
 		return nil, err
 	}
-
-	today := time.Now().Format("2006-01-02")
-	types := []string{"vocab", "grammar", "kanji", "conjugation", "reading"}
-	counts := make(map[string]int)
-	for _, t := range types {
-		c, _ := s.goalsRepo.GetDailyCount(userID, today, t)
-		counts[t] = c
+	
+	// Get streak
+	streak, err := s.goalsRepo.GetUserStreak(userID)
+	if err != nil {
+		return nil, err
 	}
-
-	return &models.DailyProgressResponse{
-		VocabCompleted:       counts["vocab"],
-		VocabTarget:          settings.VocabTarget,
-		GrammarCompleted:     counts["grammar"],
-		GrammarTarget:        settings.GrammarTarget,
-		KanjiCompleted:       counts["kanji"],
-		KanjiTarget:          settings.KanjiTarget,
-		ConjugationCompleted: counts["conjugation"],
-		ConjugationTarget:    settings.ConjugationTarget,
-		ReadingCompleted:     counts["reading"],
-		ReadingTarget:        settings.ReadingTarget,
+	
+	// Calculate overall progress
+	totalTarget := goal.VocabTarget + goal.GrammarTarget + goal.KanjiTarget + 
+		goal.ConjugationTarget + goal.ReadingTarget
+	totalCompleted := goal.VocabCompleted + goal.GrammarCompleted + goal.KanjiCompleted + 
+		goal.ConjugationCompleted + goal.ReadingCompleted
+	
+	progress := 0
+	if totalTarget > 0 {
+		progress = int(math.Min(100, float64(totalCompleted)/float64(totalTarget)*100))
+	}
+	
+	return &models.DailyProgress{
+		Date:              time.Now().Format("2006-01-02"),
+		VocabCompleted:    goal.VocabCompleted,
+		VocabTarget:       goal.VocabTarget,
+		GrammarCompleted:  goal.GrammarCompleted,
+		GrammarTarget:     goal.GrammarTarget,
+		KanjiCompleted:    goal.KanjiCompleted,
+		KanjiTarget:       goal.KanjiTarget,
+		ConjugationCompleted: goal.ConjugationCompleted,
+		ConjugationTarget:    goal.ConjugationTarget,
+		ReadingCompleted:  goal.ReadingCompleted,
+		ReadingTarget:     goal.ReadingTarget,
+		OverallProgress:   progress,
+		IsCompleted:       goal.IsCompleted,
+		CurrentStreak:     streak.CurrentStreak,
 	}, nil
 }
 
-func (s *GoalsService) GetStreak(userID string) (*models.StreakResponse, error) {
-	progress, err := s.progressRepo.GetByUserID(userID)
+// UpdateProgress updates progress for a specific activity type
+func (s *GoalsService) UpdateProgress(userID string, activityType string, count int) error {
+	// Get today's goal
+	goal, err := s.goalsRepo.GetOrCreateDailyGoal(userID, time.Now())
 	if err != nil {
-		return nil, err
+		return err
 	}
-	lastStudy := ""
-	if progress.LastStudyDate != nil {
-		lastStudy = progress.LastStudyDate.Format("2006-01-02")
+	
+	// Update appropriate counter
+	switch activityType {
+	case "vocab":
+		goal.VocabCompleted += count
+	case "grammar":
+		goal.GrammarCompleted += count
+	case "kanji":
+		goal.KanjiCompleted += count
+	case "conjugation":
+		goal.ConjugationCompleted += count
+	case "reading":
+		goal.ReadingCompleted += count
+	default:
+		return fmt.Errorf("unknown activity type: %s", activityType)
 	}
-	return &models.StreakResponse{
-		CurrentStreak: progress.StreakDays,
-		LongestStreak: progress.StreakDays,
-		LastStudyDate: lastStudy,
-	}, nil
+	
+	// Save goal
+	if err := s.goalsRepo.UpdateDailyGoal(goal); err != nil {
+		return err
+	}
+	
+	// Record activity for streak
+	if err := s.goalsRepo.RecordActivity(userID); err != nil {
+		return err
+	}
+	
+	return nil
 }
 
-func (s *GoalsService) GetWeeklyProgress(userID string) ([]models.WeeklyDay, error) {
-	settings, err := s.goalsRepo.GetOrCreateSettings(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	now := time.Now()
-	days := make([]string, 7)
-	for i := 6; i >= 0; i-- {
-		days[6-i] = now.AddDate(0, 0, -i).Format("2006-01-02")
-	}
-
-	activityMap, err := s.goalsRepo.GetWeeklyActivity(userID, days)
-	if err != nil {
-		return nil, err
-	}
-
-	total := settings.VocabTarget + settings.GrammarTarget + settings.KanjiTarget +
-		settings.ConjugationTarget + settings.ReadingTarget
-
-	result := make([]models.WeeklyDay, 7)
-	for i, d := range days {
-		acts := activityMap[d]
-		done := acts["vocab"] + acts["grammar"] + acts["kanji"] + acts["conjugation"] + acts["reading"]
-		progress := 0
-		if total > 0 {
-			progress = (done * 100) / total
-			if progress > 100 {
-				progress = 100
-			}
-		}
-		result[i] = models.WeeklyDay{
-			Date:            d,
-			OverallProgress: progress,
-			IsCompleted:     progress >= 100,
-		}
-	}
-	return result, nil
+// GetGoalSettings retrieves user's goal settings
+func (s *GoalsService) GetGoalSettings(userID string) (*models.GoalSettings, error) {
+	return s.goalsRepo.GetGoalSettings(userID)
 }
 
-func (s *GoalsService) GetSettings(userID string) (*models.UserGoalSettings, error) {
-	return s.goalsRepo.GetOrCreateSettings(userID)
-}
-
-func (s *GoalsService) SaveSettings(userID string, settings *models.UserGoalSettings) error {
+// UpdateGoalSettings updates user's goal settings
+func (s *GoalsService) UpdateGoalSettings(userID string, settings *models.GoalSettings) error {
 	settings.UserID = userID
-	return s.goalsRepo.SaveSettings(settings)
+	return s.goalsRepo.UpdateGoalSettings(settings)
 }
 
-func (s *GoalsService) RecordActivity(userID, activityType string, count int) error {
-	if count <= 0 {
-		count = 1
-	}
-	today := time.Now().Format("2006-01-02")
-	return s.goalsRepo.IncrementActivity(userID, today, activityType, count)
+// GetUserStreak gets user's streak information
+func (s *GoalsService) GetUserStreak(userID string) (*models.UserStreak, error) {
+	return s.goalsRepo.GetUserStreak(userID)
 }
 
-func (s *GoalsService) GetAllAchievements() ([]models.AchievementDef, error) {
-	return s.goalsRepo.GetAllAchievements()
-}
-
-func (s *GoalsService) GetUserAchievements(userID string) ([]models.UserAchievement, error) {
+// GetAchievements retrieves user's achievements
+func (s *GoalsService) GetAchievements(userID string) ([]models.Achievement, error) {
 	return s.goalsRepo.GetUserAchievements(userID)
 }
 
-func (s *GoalsService) CheckAndGrantAchievements(userID string) error {
-	all, err := s.goalsRepo.GetAllAchievements()
+// CheckAndAwardAchievements checks and awards new achievements
+func (s *GoalsService) CheckAndAwardAchievements(userID string) ([]models.Achievement, error) {
+	// Get current stats
+	streak, err := s.goalsRepo.GetUserStreak(userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	earned, err := s.goalsRepo.GetUserAchievements(userID)
+	
+	// Get existing achievements
+	existingAchievements, err := s.goalsRepo.GetUserAchievements(userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	earnedIDs := make(map[string]bool)
-	for _, e := range earned {
-		earnedIDs[e.AchievementID] = true
+	
+	// Create map of earned achievement IDs
+	earnedMap := make(map[string]bool)
+	for _, a := range existingAchievements {
+		earnedMap[a.Type] = true // Using Type as key for simplicity
 	}
-
-	progress, err := s.progressRepo.GetByUserID(userID)
-	if err != nil {
-		return err
-	}
-
-	today := time.Now().Format("2006-01-02")
-	totalConj := 0
-	{
-		c, _ := s.goalsRepo.GetDailyCount(userID, today, "conjugation")
-		totalConj = c
-	}
-
-	for _, a := range all {
-		if earnedIDs[a.ID] {
-			continue
+	
+	// Get all achievement definitions
+	definitions := models.GetAchievementDefinitions()
+	
+	var newAchievements []models.Achievement
+	
+	// Check each achievement
+	for _, def := range definitions {
+		if earnedMap[def.ID] {
+			continue // Already earned
 		}
-		var met bool
-		switch a.RequirementType {
-		case "streak_days":
-			met = progress.StreakDays >= a.RequirementValue
-		case "total_count":
-			switch a.Category {
-			case "vocab":
-				met = progress.WordsLearnedCount >= a.RequirementValue
-			case "grammar":
-				met = progress.GrammarLearnedCount >= a.RequirementValue
-			case "conjugation":
-				met = totalConj >= a.RequirementValue
+		
+		earned := false
+		
+		switch def.Type {
+		case "streak":
+			if streak.CurrentStreak >= def.Requirement {
+				earned = true
 			}
+		// Add more cases for other achievement types
+		// These would require querying other repositories for counts
 		}
-		if met {
-			_ = s.goalsRepo.GrantAchievement(userID, a.ID)
-			fmt.Printf("Granted achievement %s to user %s\n", a.Name, userID)
+		
+		if earned {
+			if err := s.goalsRepo.AddAchievement(userID, def); err != nil {
+				continue
+			}
+			
+			newAchievements = append(newAchievements, models.Achievement{
+				ID:          def.ID,
+				UserID:      userID,
+				Type:        def.Type,
+				Name:        def.Name,
+				Description: def.Description,
+				Icon:        def.Icon,
+				Level:       def.Level,
+				EarnedAt:    time.Now(),
+				IsNew:       true,
+			})
 		}
 	}
-	return nil
+	
+	return newAchievements, nil
+}
+
+// GetWeeklyProgress gets progress for the last 7 days
+func (s *GoalsService) GetWeeklyProgress(userID string) ([]models.DailyProgress, error) {
+	goals, err := s.goalsRepo.GetRecentDailyGoals(userID, 7)
+	if err != nil {
+		return nil, err
+	}
+	
+	var progress []models.DailyProgress
+	for _, g := range goals {
+		totalTarget := g.VocabTarget + g.GrammarTarget + g.KanjiTarget + 
+			g.ConjugationTarget + g.ReadingTarget
+		totalCompleted := g.VocabCompleted + g.GrammarCompleted + g.KanjiCompleted + 
+			g.ConjugationCompleted + g.ReadingCompleted
+		
+		p := 0
+		if totalTarget > 0 {
+			p = int(math.Min(100, float64(totalCompleted)/float64(totalTarget)*100))
+		}
+		
+		progress = append(progress, models.DailyProgress{
+			Date:              g.Date.Format("2006-01-02"),
+			VocabCompleted:    g.VocabCompleted,
+			VocabTarget:       g.VocabTarget,
+			GrammarCompleted:  g.GrammarCompleted,
+			GrammarTarget:     g.GrammarTarget,
+			KanjiCompleted:    g.KanjiCompleted,
+			KanjiTarget:       g.KanjiTarget,
+			ConjugationCompleted: g.ConjugationCompleted,
+			ConjugationTarget:    g.ConjugationTarget,
+			ReadingCompleted:  g.ReadingCompleted,
+			ReadingTarget:     g.ReadingTarget,
+			OverallProgress:   p,
+			IsCompleted:       g.IsCompleted,
+		})
+	}
+	
+	return progress, nil
+}
+
+// GetAllAchievementDefinitions returns all available achievements
+func (s *GoalsService) GetAllAchievementDefinitions() []models.AchievementDefinition {
+	return models.GetAchievementDefinitions()
 }

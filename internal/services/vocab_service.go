@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
 )
 
 type VocabService struct {
@@ -276,6 +276,11 @@ func (s *VocabService) getTotalWordsForLevel(level string) int {
 // BulkCreateVocabulary is a helper for seeding data
 func (s *VocabService) BulkCreateVocabulary(vocabList []models.Vocabulary) error {
 	return s.vocabRepo.BulkCreate(vocabList)
+}
+
+// SearchVocabulary searches vocabulary by query string
+func (s *VocabService) SearchVocabulary(query, level string) ([]*models.Vocabulary, error) {
+	return s.vocabRepo.Search(query, level)
 }
 
 // getNextLevel returns the next JLPT level after completing current

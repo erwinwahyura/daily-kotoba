@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 type GrammarRepository struct {
@@ -203,32 +203,48 @@ func (r *GrammarRepository) BulkCreate(patterns []models.GrammarPattern) error {
 	return tx.Commit()
 }
 
-// Search finds grammar patterns matching query in pattern or meaning
-func (r *GrammarRepository) Search(query, level string, limit int) ([]models.GrammarPattern, error) {
-	like := "%" + query + "%"
-	args := []interface{}{like, like}
-	where := "(pattern LIKE " + r.db.Placeholder(1) + " OR meaning LIKE " + r.db.Placeholder(2) + ")"
-
+func (r *GrammarRepository) Search(query, level string) ([]*models.GrammarPattern, error) {
+	var args []interface{}
+	
+	searchPattern := "%" + query + "%"
+	args = append(args, searchPattern, searchPattern)
+	
+	whereClause := "WHERE (pattern LIKE $1 OR meaning LIKE $2)"
+	
 	if level != "" {
+		whereClause += fmt.Sprintf(" AND jlpt_level = $%d", len(args)+1)
 		args = append(args, level)
-		where += " AND jlpt_level = " + r.db.Placeholder(len(args))
 	}
-	args = append(args, limit)
-	sql := "SELECT id, pattern, meaning, jlpt_level FROM grammar_patterns WHERE " + where + " ORDER BY jlpt_level, index_position LIMIT " + r.db.Placeholder(len(args))
-
-	rows, err := r.db.Query(sql, args...)
+	
+	querySQL := fmt.Sprintf(`
+		SELECT id, pattern, plain_form, meaning, detailed_explanation,
+		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
+		       related_patterns, common_mistakes, index_position, created_at
+		FROM grammar_patterns
+		%s
+		ORDER BY jlpt_level DESC, index_position ASC
+		LIMIT 20
+	`, whereClause)
+	
+	rows, err := r.db.Query(querySQL, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("search query failed: %w", err)
 	}
 	defer rows.Close()
-
-	var results []models.GrammarPattern
+	
+	var results []*models.GrammarPattern
 	for rows.Next() {
-		var p models.GrammarPattern
-		if err := rows.Scan(&p.ID, &p.Pattern, &p.Meaning, &p.JLPTLevel); err != nil {
-			continue
+		p := &models.GrammarPattern{}
+		err := rows.Scan(
+			&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
+			&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
+			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
 		}
 		results = append(results, p)
 	}
+	
 	return results, rows.Err()
 }

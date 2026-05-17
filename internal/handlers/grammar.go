@@ -4,10 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/services"
-	"github.com/yourusername/kotoba-api/internal/utils"
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/utils"
 )
 
 type GrammarHandler struct {
@@ -149,23 +148,21 @@ func (h *GrammarHandler) ComparePatterns(c *gin.Context) {
 	utils.SendSuccess(c, 200, "Comparison retrieved successfully", comparison)
 }
 
-// SearchGrammar searches grammar patterns
+// SearchGrammar searches grammar patterns by query
 func (h *GrammarHandler) SearchGrammar(c *gin.Context) {
-	q := c.Query("q")
-	if len(q) < 1 {
-		utils.SendError(c, 400, "Query parameter 'q' is required", nil)
+	query := c.Query("q")
+	if query == "" {
+		utils.SendError(c, 400, "Search query is required", nil)
 		return
 	}
-	level := c.Query("level")
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 
-	results, err := h.grammarService.SearchGrammar(q, level, limit)
+	level := c.Query("level")
+	
+	results, err := h.grammarService.SearchGrammar(query, level)
 	if err != nil {
-		utils.SendError(c, 500, "Search failed", err)
+		utils.SendError(c, 500, "Failed to search grammar patterns", err)
 		return
 	}
-	if results == nil {
-		results = []models.GrammarPattern{}
-	}
-	utils.SendSuccess(c, 200, "", gin.H{"results": results})
+
+	utils.SendSuccess(c, 200, "Search completed", gin.H{"results": results, "count": len(results)})
 }

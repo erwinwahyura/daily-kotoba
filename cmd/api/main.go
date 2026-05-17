@@ -11,12 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/yourusername/kotoba-api/internal/config"
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/handlers"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/repository"
-	"github.com/yourusername/kotoba-api/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/config"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/handlers"
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
 )
 
 func main() {
@@ -89,9 +89,28 @@ func main() {
 	conjRepo := repository.NewConjugationRepository(wrappedDB)
 	ttsRepo := repository.NewTTSRepository(wrappedDB)
 	jlptRepo := repository.NewJLPTRepository(wrappedDB)
-	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 	kanjiRepo := repository.NewKanjiRepository(wrappedDB)
+	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 	listeningRepo := repository.NewListeningRepository(wrappedDB)
+	conversationRepo := repository.NewConversationRepository(wrappedDB)
+
+	// Seed static data (kanji, listening exercises, conversation scenarios)
+	log.Println("Seeding static data...")
+	if err := kanjiRepo.SeedSampleKanji(); err != nil {
+		log.Printf("Warning: failed to seed kanji: %v", err)
+	} else {
+		log.Println("Kanji data seeded successfully")
+	}
+	if err := listeningRepo.SeedSampleExercises(); err != nil {
+		log.Printf("Warning: failed to seed listening exercises: %v", err)
+	} else {
+		log.Println("Listening exercises seeded successfully")
+	}
+	if err := conversationRepo.SeedScenarios(); err != nil {
+		log.Printf("Warning: failed to seed conversation scenarios: %v", err)
+	} else {
+		log.Println("Conversation scenarios seeded successfully")
+	}
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -102,9 +121,10 @@ func main() {
 	conjService := services.NewConjugationService(conjRepo)
 	ttsService := services.NewTTSService(ttsRepo)
 	jlptService := services.NewJLPTService(jlptRepo)
-	goalsService := services.NewGoalsService(goalsRepo, progressRepo)
 	kanjiService := services.NewKanjiService(kanjiRepo)
-	listeningService := services.NewListeningService(listeningRepo, ttsService)
+	goalsService := services.NewGoalsService(goalsRepo)
+	listeningService := services.NewListeningService(listeningRepo)
+	conversationService := services.NewConversationService(conversationRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -116,9 +136,10 @@ func main() {
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 	srsHandler := handlers.NewSRShandler(srsService)
 	conjHandler := handlers.NewConjugationHandler(conjService)
-	goalsHandler := handlers.NewGoalsHandler(goalsService)
 	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
+	goalsHandler := handlers.NewGoalsHandler(goalsService)
 	listeningHandler := handlers.NewListeningHandler(listeningService)
+	conversationHandler := handlers.NewConversationHandler(conversationService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -179,6 +200,7 @@ func main() {
 
 			// Vocabulary by level route (outside /vocab group for cleaner URL)
 			protected.GET("/vocab/level/:level", vocabHandler.GetVocabularyByLevel)
+			protected.GET("/vocab/search", vocabHandler.SearchVocabulary)
 
 			// Progress routes
 			progress := protected.Group("/progress")
@@ -198,6 +220,7 @@ func main() {
 				grammar.POST("/:id/skip", grammarHandler.SkipPattern)
 			}
 			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
+			protected.GET("/grammar/search", grammarHandler.SearchGrammar)
 
 			// SRS (Spaced Repetition) routes
 			srs := protected.Group("/srs")
@@ -214,6 +237,8 @@ func main() {
 				conjugation.GET("/start", conjHandler.StartSession)     // Start drill session
 				conjugation.POST("/answer", conjHandler.SubmitAnswer)    // Submit answer
 				conjugation.GET("/progress", conjHandler.GetProgress)    // Get progress stats
+				conjugation.GET("/weak-points", conjHandler.GetWeakPoints) // Get weak points analysis
+				conjugation.POST("/weak-points/drill", conjHandler.StartWeakPointDrill) // Start weak point drill
 			}
 
 			// TTS (Text-to-Speech) routes
@@ -266,6 +291,56 @@ func main() {
 				listening.GET("/exercise/:id", listeningHandler.GetExercise)
 				listening.POST("/session/start", listeningHandler.StartSession)
 				listening.POST("/session/answer", listeningHandler.SubmitAnswer)
+			}
+
+			// Kanji Writing Practice routes
+			kanji := protected.Group("/kanji")
+			{
+				kanji.GET("/level/:level", kanjiHandler.GetKanjiByLevel)      // Get kanji by JLPT level
+				kanji.GET("/character/:char", kanjiHandler.GetKanjiByCharacter) // Get kanji details
+				kanji.POST("/practice/start", kanjiHandler.StartPracticeSession) // Start practice session
+				kanji.POST("/practice/compare", kanjiHandler.CompareStroke)     // Compare stroke
+				kanji.GET("/practice/:id", kanjiHandler.GetPracticeSession)     // Get session
+				kanji.GET("/stats", kanjiHandler.GetUserStats)                   // Get user stats
+			}
+			// Admin: Seed kanji data
+			protected.POST("/kanji/seed", kanjiHandler.SeedKanjiData)
+
+			// Goals, Streaks, and Achievements routes
+			goals := protected.Group("/goals")
+			{
+				goals.GET("/daily", goalsHandler.GetDailyProgress)      // Get today's progress
+				goals.POST("/progress", goalsHandler.UpdateProgress)    // Update activity progress
+				goals.GET("/settings", goalsHandler.GetSettings)       // Get goal settings
+				goals.PUT("/settings", goalsHandler.UpdateSettings)    // Update goal settings
+				goals.GET("/streak", goalsHandler.GetStreak)            // Get streak info
+				goals.GET("/achievements", goalsHandler.GetAchievements) // Get earned achievements
+				goals.GET("/achievements/all", goalsHandler.GetAllAchievements) // Get all available
+				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)    // Get last 7 days
+			}
+
+			// Listening Practice routes
+			listening := protected.Group("/listening")
+			{
+				listening.GET("/exercises/:level", listeningHandler.GetExercises) // Get exercises by level
+				listening.GET("/exercise/:id", listeningHandler.GetExercise)        // Get specific exercise
+				listening.POST("/session/start", listeningHandler.StartSession)    // Start listening session
+				listening.POST("/session/answer", listeningHandler.SubmitAnswer)   // Submit answer
+				listening.GET("/session/:id", listeningHandler.GetSession)          // Get session progress
+				listening.GET("/stats", listeningHandler.GetStats)                  // Get user stats
+			}
+			// Admin: Seed listening exercises
+			protected.POST("/listening/seed", listeningHandler.SeedExercises)
+
+			// Nichijou Conversation routes (Phase 1: AI Chat)
+			nichijou := protected.Group("/nichijou")
+			{
+				nichijou.GET("/scenarios", conversationHandler.GetScenarios)      // Get available scenarios
+				nichijou.POST("/chat/start", conversationHandler.StartChat)       // Start AI conversation
+				nichijou.POST("/chat/message", conversationHandler.SendMessage)   // Send message
+				nichijou.POST("/chat/end/:id", conversationHandler.EndSession)    // End session
+				nichijou.GET("/chat/history/:id", conversationHandler.GetSessionHistory) // Get session history
+				nichijou.GET("/stats", conversationHandler.GetUserStats)          // Get user stats
 			}
 		}
 	}

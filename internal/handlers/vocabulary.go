@@ -4,10 +4,10 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/services"
-	"github.com/yourusername/kotoba-api/internal/utils"
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/utils"
 )
 
 type VocabularyHandler struct {
@@ -123,4 +123,22 @@ func (h *VocabularyHandler) GetVocabularyByLevel(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, 200, "Vocabulary list retrieved successfully", response)
+}
+
+func (h *VocabularyHandler) SearchVocabulary(c *gin.Context) {
+	query := c.Query("q")
+	if query == "" {
+		utils.SendError(c, 400, "Search query is required", nil)
+		return
+	}
+
+	level := c.Query("level")
+	
+	results, err := h.vocabService.SearchVocabulary(query, level)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to search vocabulary", err)
+		return
+	}
+
+	utils.SendSuccess(c, 200, "Search completed", gin.H{"results": results, "count": len(results)})
 }

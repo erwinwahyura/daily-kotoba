@@ -3,163 +3,342 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
+// ListeningRepository handles listening exercise data access
 type ListeningRepository struct {
 	db *db.DB
 }
 
+// NewListeningRepository creates a new repository
 func NewListeningRepository(db *db.DB) *ListeningRepository {
 	return &ListeningRepository{db: db}
 }
 
-func (r *ListeningRepository) GetExercisesByLevel(level string) ([]models.ListeningExerciseSummary, error) {
-	rows, err := r.db.Query(
-		"SELECT id, title, difficulty, duration_seconds, topic FROM listening_exercises WHERE jlpt_level = "+r.db.Placeholder(1)+" ORDER BY difficulty",
-		level,
-	)
+// GetExercisesByLevel retrieves listening exercises by JLPT level
+func (r *ListeningRepository) GetExercisesByLevel(level string, limit int) ([]models.ListeningExercise, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+
+	query := `
+		SELECT id, title, jlpt_level, difficulty, audio_url, duration, transcript, 
+		       translation, vocabulary, questions, topic, created_at
+		FROM listening_exercises 
+		WHERE jlpt_level = $1 
+		ORDER BY difficulty, created_at DESC 
+		LIMIT $2
+	`
+
+	rows, err := r.db.Query(query, level, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var list []models.ListeningExerciseSummary
-	for rows.Next() {
-		var ex models.ListeningExerciseSummary
-		if err := rows.Scan(&ex.ID, &ex.Title, &ex.Difficulty, &ex.Duration, &ex.Topic); err != nil {
-			continue
-		}
-		list = append(list, ex)
-	}
-	return list, rows.Err()
+	return r.scanExercises(rows)
 }
 
-func (r *ListeningRepository) GetExercise(id string) (*models.ListeningExercise, error) {
-	ex := &models.ListeningExercise{}
-	err := r.db.QueryRow(
-		"SELECT id, title, jlpt_level, difficulty, topic, transcript, translation, duration_seconds, tts_cache_id, created_at FROM listening_exercises WHERE id = "+r.db.Placeholder(1),
-		id,
-	).Scan(&ex.ID, &ex.Title, &ex.JLPTLevel, &ex.Difficulty, &ex.Topic, &ex.Transcript, &ex.Translation, &ex.DurationSeconds, &ex.TTSCacheID, &ex.CreatedAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
-	return ex, err
-}
+// GetExerciseByID retrieves a specific exercise
+func (r *ListeningRepository) GetExerciseByID(id string) (*models.ListeningExercise, error) {
+	exercise := &models.ListeningExercise{}
+	var vocabJSON, questionsJSON []byte
 
-func (r *ListeningRepository) GetQuestions(exerciseID string) ([]models.ListeningQuestion, error) {
-	rows, err := r.db.Query(
-		"SELECT id, exercise_id, question_num, question, options, correct_index FROM listening_questions WHERE exercise_id = "+r.db.Placeholder(1)+" ORDER BY question_num",
-		exerciseID,
+	query := `
+		SELECT id, title, jlpt_level, difficulty, audio_url, duration, transcript,
+		       translation, vocabulary, questions, topic, created_at
+		FROM listening_exercises WHERE id = $1
+	`
+
+	err := r.db.QueryRow(query, id).Scan(
+		&exercise.ID, &exercise.Title, &exercise.JLPTLevel, &exercise.Difficulty,
+		&exercise.AudioURL, &exercise.Duration, &exercise.Transcript,
+		&exercise.Translation, &vocabJSON, &questionsJSON, &exercise.Topic, &exercise.CreatedAt,
 	)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("exercise not found")
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var list []models.ListeningQuestion
-	for rows.Next() {
-		var q models.ListeningQuestion
-		if err := rows.Scan(&q.ID, &q.ExerciseID, &q.QuestionNum, &q.Question, &q.OptionsJSON, &q.CorrectIdx); err != nil {
-			continue
-		}
-		_ = json.Unmarshal([]byte(q.OptionsJSON), &q.Options)
-		list = append(list, q)
+	// Parse JSON
+	if err := json.Unmarshal(vocabJSON, &exercise.Vocabulary); err != nil {
+		return nil, fmt.Errorf("failed to parse vocabulary: %w", err)
 	}
-	return list, rows.Err()
+	if err := json.Unmarshal(questionsJSON, &exercise.Questions); err != nil {
+		return nil, fmt.Errorf("failed to parse questions: %w", err)
+	}
+
+	return exercise, nil
 }
 
-func (r *ListeningRepository) GetVocabulary(exerciseID string) ([]models.ListeningVocabulary, error) {
-	rows, err := r.db.Query(
-		"SELECT id, exercise_id, word, reading, meaning FROM listening_vocabulary WHERE exercise_id = "+r.db.Placeholder(1),
-		exerciseID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+// CreateSession creates a new listening session
+func (r *ListeningRepository) CreateSession(session *models.ListeningSession) error {
+	answersJSON, _ := json.Marshal(session.Answers)
 
-	var list []models.ListeningVocabulary
-	for rows.Next() {
-		var v models.ListeningVocabulary
-		if err := rows.Scan(&v.ID, &v.ExerciseID, &v.Word, &v.Reading, &v.Meaning); err != nil {
-			continue
-		}
-		list = append(list, v)
-	}
-	return list, rows.Err()
-}
+	query := `
+		INSERT INTO listening_sessions (id, user_id, exercise_id, started_at, current_position, 
+			answers, status, play_count, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
 
-func (r *ListeningRepository) SetTTSCacheID(exerciseID, cacheID string) error {
-	_, err := r.db.Exec(
-		"UPDATE listening_exercises SET tts_cache_id = "+r.db.Placeholder(1)+" WHERE id = "+r.db.Placeholder(2),
-		cacheID, exerciseID,
-	)
+	_, err := r.db.Exec(query, session.ID, session.UserID, session.ExerciseID,
+		session.StartedAt, session.CurrentPosition, answersJSON, session.Status,
+		session.PlayCount, time.Now())
+
 	return err
 }
 
-func (r *ListeningRepository) CreateSession(userID, exerciseID string, totalQuestions int) (*models.ListeningSession, error) {
-	id := r.db.GenerateUUID()
-	now := time.Now()
-	_, err := r.db.Exec(
-		"INSERT INTO listening_sessions (id, user_id, exercise_id, started_at, score, total_questions, status) VALUES ("+
-			r.db.Placeholder(1)+", "+r.db.Placeholder(2)+", "+r.db.Placeholder(3)+", "+r.db.Placeholder(4)+", 0, "+r.db.Placeholder(5)+", 'in_progress')",
-		id, userID, exerciseID, now, totalQuestions,
+// UpdateSession updates a listening session
+func (r *ListeningRepository) UpdateSession(session *models.ListeningSession) error {
+	answersJSON, _ := json.Marshal(session.Answers)
+
+	var completedAt interface{}
+	if session.CompletedAt != nil {
+		completedAt = *session.CompletedAt
+	} else {
+		completedAt = nil
+	}
+
+	query := `
+		UPDATE listening_sessions 
+		SET current_position = $1, answers = $2, score = $3, status = $4, 
+		    completed_at = $5, play_count = $6
+		WHERE id = $7
+	`
+
+	_, err := r.db.Exec(query, session.CurrentPosition, answersJSON, session.Score,
+		session.Status, completedAt, session.PlayCount, session.ID)
+
+	return err
+}
+
+// GetSession retrieves a listening session
+func (r *ListeningRepository) GetSession(sessionID string) (*models.ListeningSession, error) {
+	session := &models.ListeningSession{}
+	var answersJSON []byte
+	var completedAt sql.NullTime
+
+	query := `
+		SELECT id, user_id, exercise_id, started_at, completed_at, current_position,
+		       answers, score, status, play_count
+		FROM listening_sessions WHERE id = $1
+	`
+
+	err := r.db.QueryRow(query, sessionID).Scan(
+		&session.ID, &session.UserID, &session.ExerciseID, &session.StartedAt,
+		&completedAt, &session.CurrentPosition, &answersJSON, &session.Score,
+		&session.Status, &session.PlayCount,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &models.ListeningSession{
-		ID: id, UserID: userID, ExerciseID: exerciseID,
-		StartedAt: now, TotalQuestions: totalQuestions, Status: "in_progress",
-	}, nil
-}
 
-func (r *ListeningRepository) GetSession(sessionID string) (*models.ListeningSession, error) {
-	s := &models.ListeningSession{}
-	err := r.db.QueryRow(
-		"SELECT id, user_id, exercise_id, started_at, completed_at, score, total_questions, status FROM listening_sessions WHERE id = "+r.db.Placeholder(1),
-		sessionID,
-	).Scan(&s.ID, &s.UserID, &s.ExerciseID, &s.StartedAt, &s.CompletedAt, &s.Score, &s.TotalQuestions, &s.Status)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+	if completedAt.Valid {
+		session.CompletedAt = &completedAt.Time
 	}
-	return s, err
+
+	json.Unmarshal(answersJSON, &session.Answers)
+
+	return session, nil
 }
 
-func (r *ListeningRepository) SubmitAnswer(sessionID, questionID string, answerIdx, correctIdx int) (bool, error) {
-	isCorrect := answerIdx == correctIdx
-	id := r.db.GenerateUUID()
-	_, err := r.db.Exec(
-		"INSERT OR IGNORE INTO listening_session_answers (id, session_id, question_id, answer_index, is_correct) VALUES ("+
-			r.db.Placeholder(1)+", "+r.db.Placeholder(2)+", "+r.db.Placeholder(3)+", "+r.db.Placeholder(4)+", "+r.db.Placeholder(5)+")",
-		id, sessionID, questionID, answerIdx, isCorrect,
-	)
+// GetUserStats retrieves user's listening statistics
+func (r *ListeningRepository) GetUserStats(userID string) (*models.ListeningProgress, error) {
+	stats := &models.ListeningProgress{
+		ByLevel: make(map[string]models.LevelStats),
+	}
+
+	// Total completed and average score
+	query := `
+		SELECT COUNT(*), COALESCE(AVG(score), 0)
+		FROM listening_sessions 
+		WHERE user_id = $1 AND status = 'completed'
+	`
+	err := r.db.QueryRow(query, userID).Scan(&stats.CompletedCount, &stats.AverageScore)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	if isCorrect {
-		_, err = r.db.Exec(
-			"UPDATE listening_sessions SET score = score + 1 WHERE id = "+r.db.Placeholder(1),
-			sessionID,
-		)
+
+	// Total exercises available
+	err = r.db.QueryRow("SELECT COUNT(*) FROM listening_exercises").Scan(&stats.TotalExercises)
+	if err != nil {
+		return nil, err
 	}
-	return isCorrect, err
+
+	// Stats by level
+	levelQuery := `
+		SELECT e.jlpt_level, COUNT(*), AVG(s.score)
+		FROM listening_sessions s
+		JOIN listening_exercises e ON s.exercise_id = e.id
+		WHERE s.user_id = $1 AND s.status = 'completed'
+		GROUP BY e.jlpt_level
+	`
+	rows, err := r.db.Query(levelQuery, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var level string
+		var count int
+		var avg float64
+		if err := rows.Scan(&level, &count, &avg); err != nil {
+			continue
+		}
+		stats.ByLevel[level] = models.LevelStats{
+			Completed: count,
+			Average:   avg,
+		}
+	}
+
+	return stats, rows.Err()
 }
 
-func (r *ListeningRepository) GetQuestion(questionID string) (*models.ListeningQuestion, error) {
-	q := &models.ListeningQuestion{}
-	err := r.db.QueryRow(
-		"SELECT id, exercise_id, question_num, question, options, correct_index FROM listening_questions WHERE id = "+r.db.Placeholder(1),
-		questionID,
-	).Scan(&q.ID, &q.ExerciseID, &q.QuestionNum, &q.Question, &q.OptionsJSON, &q.CorrectIdx)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+// SeedSampleExercises adds sample listening exercises
+func (r *ListeningRepository) SeedSampleExercises() error {
+	exercises := []models.ListeningExercise{
+		{
+			ID:          "listen_n5_001",
+			Title:       "At the Restaurant",
+			JLPTLevel:   "N5",
+			Difficulty:  "easy",
+			AudioURL:    "https://example.com/audio/n5_restaurant.mp3",
+			Duration:    45,
+			Transcript:  "いらっしゃいませ。何名様ですか。\n二人です。\nこちらへどうぞ。メニューをどうぞ。\nありがとうございます。",
+			Translation: "Welcome. How many people?\nTwo people.\nThis way please. Here's the menu.\nThank you.",
+			Vocabulary: []models.VocabItem{
+				{Word: "いらっしゃいませ", Reading: "いらっしゃいませ", Meaning: "Welcome", Timestamp: 0},
+				{Word: "何名様", Reading: "なんめいさま", Meaning: "How many people", Timestamp: 2},
+				{Word: "二人", Reading: "ふたり", Meaning: "Two people", Timestamp: 5},
+				{Word: "メニュー", Reading: "めにゅー", Meaning: "Menu", Timestamp: 12},
+			},
+			Questions: []models.ListeningQuestion{
+				{
+					ID:          "q1",
+					Question:    "How many people are there?",
+					Options:     []string{"One", "Two", "Three", "Four"},
+					Correct:     1,
+					Timestamp:   45,
+					Explanation: "The customer says 二人 (ふたり) which means two people.",
+				},
+			},
+			Topic: "conversation",
+		},
+		{
+			ID:          "listen_n4_001",
+			Title:       "Train Station Announcement",
+			JLPTLevel:   "N4",
+			Difficulty:  "medium",
+			AudioURL:    "https://example.com/audio/n4_station.mp3",
+			Duration:    60,
+			Transcript:  "まもなく、東京駅に到着いたします。\nお出口は左側です。\nお忘れ物のないようにご注意ください。\nありがとうございました。",
+			Translation: "We will soon arrive at Tokyo Station.\nThe exit is on the left side.\nPlease be careful not to forget your belongings.\nThank you.",
+			Vocabulary: []models.VocabItem{
+				{Word: "まもなく", Reading: "まもなく", Meaning: "Soon", Timestamp: 0},
+				{Word: "到着", Reading: "とうちゃく", Meaning: "Arrival", Timestamp: 3},
+				{Word: "お出口", Reading: "おでぐち", Meaning: "Exit", Timestamp: 10},
+				{Word: "お忘れ物", Reading: "おわすれもの", Meaning: "Forgotten items", Timestamp: 20},
+			},
+			Questions: []models.ListeningQuestion{
+				{
+					ID:          "q1",
+					Question:    "Which side is the exit?",
+					Options:     []string{"Right side", "Left side", "Both sides", "Not mentioned"},
+					Correct:     1,
+					Timestamp:   60,
+					Explanation: "The announcement says 左側 (ひだりがわ) which means left side.",
+				},
+			},
+			Topic: "announcement",
+		},
+		{
+			ID:          "listen_n3_001",
+			Title:       "Office Conversation",
+			JLPTLevel:   "N3",
+			Difficulty:  "hard",
+			AudioURL:    "https://example.com/audio/n3_office.mp3",
+			Duration:    90,
+			Transcript:  "田中さん、来週の会議の資料はできましたか。\nはい、ほぼ完成しました。\nあと少しで終わりますので、今日中にお送りします。\nわかりました。よろしくお願いします。",
+			Translation: "Tanaka-san, is the material for next week's meeting ready?\nYes, it's almost complete.\nI'll finish it soon and send it to you today.\nUnderstood. Thank you for your help.",
+			Vocabulary: []models.VocabItem{
+				{Word: "来週", Reading: "らいしゅう", Meaning: "Next week", Timestamp: 0},
+				{Word: "会議", Reading: "かいぎ", Meaning: "Meeting", Timestamp: 3},
+				{Word: "資料", Reading: "しりょう", Meaning: "Materials", Timestamp: 5},
+				{Word: "ほぼ", Reading: "ほぼ", Meaning: "Almost", Timestamp: 15},
+				{Word: "完成", Reading: "かんせい", Meaning: "Complete", Timestamp: 17},
+				{Word: "今日中", Reading: "きょうじゅう", Meaning: "Today (by end of)", Timestamp: 35},
+			},
+			Questions: []models.ListeningQuestion{
+				{
+					ID:          "q1",
+					Question:    "When will the materials be sent?",
+					Options:     []string{"Tomorrow", "Today", "Next week", "Not mentioned"},
+					Correct:     1,
+					Timestamp:   90,
+					Explanation: "The speaker says 今日中にお送りします which means 'I will send it today'.",
+				},
+			},
+			Topic: "conversation",
+		},
 	}
-	_ = json.Unmarshal([]byte(q.OptionsJSON), &q.Options)
-	return q, err
+
+	for _, ex := range exercises {
+		// Check if exists
+		var exists bool
+		r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM listening_exercises WHERE id = $1)", ex.ID).Scan(&exists)
+		if exists {
+			continue
+		}
+
+		vocabJSON, _ := json.Marshal(ex.Vocabulary)
+		questionsJSON, _ := json.Marshal(ex.Questions)
+
+		query := `
+			INSERT INTO listening_exercises (id, title, jlpt_level, difficulty, audio_url, duration,
+				transcript, translation, vocabulary, questions, topic, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`
+		_, err := r.db.Exec(query, ex.ID, ex.Title, ex.JLPTLevel, ex.Difficulty,
+			ex.AudioURL, ex.Duration, ex.Transcript, ex.Translation, vocabJSON, questionsJSON,
+			ex.Topic, time.Now())
+		if err != nil {
+			return fmt.Errorf("failed to seed exercise %s: %w", ex.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// scanExercises helper to scan exercise rows
+func (r *ListeningRepository) scanExercises(rows *sql.Rows) ([]models.ListeningExercise, error) {
+	var exercises []models.ListeningExercise
+
+	for rows.Next() {
+		ex := models.ListeningExercise{}
+		var vocabJSON, questionsJSON []byte
+
+		err := rows.Scan(
+			&ex.ID, &ex.Title, &ex.JLPTLevel, &ex.Difficulty, &ex.AudioURL,
+			&ex.Duration, &ex.Transcript, &ex.Translation, &vocabJSON, &questionsJSON,
+			&ex.Topic, &ex.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+
+		json.Unmarshal(vocabJSON, &ex.Vocabulary)
+		json.Unmarshal(questionsJSON, &ex.Questions)
+
+		exercises = append(exercises, ex)
+	}
+
+	return exercises, rows.Err()
 }

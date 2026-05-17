@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/services"
-	"github.com/yourusername/kotoba-api/internal/utils"
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/utils"
 )
 
 type AuthHandler struct {

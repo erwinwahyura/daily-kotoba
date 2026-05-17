@@ -7,8 +7,8 @@ import (
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/yourusername/kotoba-api/internal/config"
-	"github.com/yourusername/kotoba-api/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/config"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
 )
 
 type PlacementQuestion struct {

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/repository"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/repository"
 )
 
 type ConjugationService struct {
@@ -17,13 +17,22 @@ func NewConjugationService(conjRepo *repository.ConjugationRepository) *Conjugat
 	return &ConjugationService{conjRepo: conjRepo}
 }
 
-// StartDrillSession starts a new conjugation drill session for a user
-func (s *ConjugationService) StartDrillSession(userID string, targetForm string) (*models.ConjugationChallengeResponse, error) {
-	// Get user's current level (simplified - could fetch from user profile)
-	jlptLevel := "N4" // Default, could be determined from user progress
+// StartDrillSession starts a new conjugation drill session for a user (backward compatible)
+func (s *ConjugationService) StartDrillSession(userID string, targetForm string) (*models.ConjugationSessionResponse, error) {
+	return s.StartDrillSessionWithLevel(userID, targetForm, "N5")
+}
 
-	// Get challenges for the form
-	challenges, err := s.conjRepo.GetChallengesByForm(targetForm, jlptLevel, 10)
+// StartDrillSessionWithLevel starts a new conjugation drill session with max JLPT level
+// maxLevel determines the highest JLPT level to include (N5 = only N5, N4 = N5+N4, etc.)
+func (s *ConjugationService) StartDrillSessionWithLevel(userID string, targetForm string, maxLevel string) (*models.ConjugationSessionResponse, error) {
+	// Validate maxLevel
+	validLevels := map[string]int{"N5": 5, "N4": 4, "N3": 3, "N2": 2, "N1": 1}
+	if _, valid := validLevels[maxLevel]; !valid {
+		maxLevel = "N5" // Default to N5 if invalid
+	}
+
+	// Get challenges for the form up to maxLevel
+	challenges, err := s.conjRepo.GetChallengesByFormUpToLevel(targetForm, maxLevel, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +58,9 @@ func (s *ConjugationService) StartDrillSession(userID string, targetForm string)
 	// Get form info
 	formInfo := s.getFormInfo(targetForm)
 
-	return &models.ConjugationChallengeResponse{
-		Challenge: challenges[0],
+	return &models.ConjugationSessionResponse{
+		Session:    session,
+		Challenges: challenges,
 		Progress: &models.ConjugationProgress{
 			CurrentForm:      targetForm,
 			TotalAttempts:    0,
@@ -58,8 +68,7 @@ func (s *ConjugationService) StartDrillSession(userID string, targetForm string)
 			DailyGoal:        20,
 			DailyCompleted:   0,
 		},
-		FormInfo:  formInfo,
-		SessionID: session.ID,
+		FormInfo: formInfo,
 	}, nil
 }
 
@@ -253,4 +262,111 @@ func (s *ConjugationService) getExplanation(challenge *models.ConjugationChallen
 		return fmt.Sprintf("Correct! %s → %s (%s form)", challenge.BaseForm, challenge.FullAnswer, challenge.TargetForm)
 	}
 	return fmt.Sprintf("The correct answer is %s. Hint: %s", challenge.FullAnswer, challenge.Hint)
+}
+
+// GetWeakPointsAnalysis analyzes user's conjugation performance
+func (s *ConjugationService) GetWeakPointsAnalysis(userID string) (*models.WeakPointsAnalysis, error) {
+	// Get accuracy stats per form
+	weakPoints, err := s.conjRepo.GetWeakPointsByForm(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Identify weak forms (accuracy < 70%)
+	var weakForms []models.WeakForm
+	var strongForms []models.WeakForm
+	
+	for form, data := range weakPoints {
+		accuracy := data["accuracy"].(float64)
+		total := data["total"].(int)
+		
+		wf := models.WeakForm{
+			Form:     form,
+			Accuracy: accuracy,
+			Total:    total,
+		}
+		
+		if accuracy < 70.0 && total >= 5 {
+			weakForms = append(weakForms, wf)
+		} else if accuracy >= 80.0 {
+			strongForms = append(strongForms, wf)
+		}
+	}
+	
+	// Sort weak forms by accuracy (lowest first)
+	for i := 0; i < len(weakForms); i++ {
+		for j := i + 1; j < len(weakForms); j++ {
+			if weakForms[i].Accuracy > weakForms[j].Accuracy {
+				weakForms[i], weakForms[j] = weakForms[j], weakForms[i]
+			}
+		}
+	}
+	
+	return &models.WeakPointsAnalysis{
+		WeakForms:   weakForms,
+		StrongForms: strongForms,
+		TotalForms:  len(weakPoints),
+	}, nil
+}
+
+// GenerateWeakPointDrill creates a focused drill for weak forms
+func (s *ConjugationService) GenerateWeakPointDrill(userID string) (*models.ConjugationSessionResponse, error) {
+	// Get weak points analysis
+	analysis, err := s.GetWeakPointsAnalysis(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// If no weak forms, return error
+	if len(analysis.WeakForms) == 0 {
+		return nil, fmt.Errorf("no weak points found - you're doing great!")
+	}
+	
+	// Pick the weakest form
+	targetForm := analysis.WeakForms[0].Form
+	
+	// Get challenges for this weak form (prioritizing ones user got wrong)
+	challenges, err := s.conjRepo.GetChallengesForWeakPoint(targetForm, userID, 10)
+	if err != nil {
+		return nil, err
+	}
+	
+	if len(challenges) == 0 {
+		return nil, fmt.Errorf("no challenges available for form: %s", targetForm)
+	}
+	
+	// Create session
+	session := &models.ConjugationSession{
+		ID:             uuid.New().String(),
+		UserID:         userID,
+		CurrentForm:    targetForm,
+		CurrentIndex:   0,
+		TotalQuestions: len(challenges),
+		StartTime:      time.Now(),
+		LastActive:     time.Now(),
+		IsWeakPointDrill: true,
+		TargetWeakForm: targetForm,
+	}
+	
+	if err := s.conjRepo.CreateSession(session); err != nil {
+		return nil, err
+	}
+	
+	// Get form info
+	formInfo := s.getFormInfo(targetForm)
+	
+	return &models.ConjugationSessionResponse{
+		Session:    session,
+		Challenges: challenges,
+		Progress: &models.ConjugationProgress{
+			CurrentForm:      targetForm,
+			TotalAttempts:    0,
+			CurrentStreak:    0,
+			DailyGoal:        10,
+			DailyCompleted:   0,
+			IsWeakPointDrill: true,
+			WeakFormAccuracy: analysis.WeakForms[0].Accuracy,
+		},
+		FormInfo: formInfo,
+	}, nil
 }

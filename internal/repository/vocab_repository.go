@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yourusername/kotoba-api/internal/db"
-	"github.com/yourusername/kotoba-api/internal/models"
+	"github.com/erwinwahyura/daily-kotoba/internal/db"
+	"github.com/erwinwahyura/daily-kotoba/internal/models"
 )
 
 type VocabRepository struct {
@@ -192,32 +192,54 @@ func (r *VocabRepository) BulkCreate(vocabList []models.Vocabulary) error {
 	return tx.Commit()
 }
 
-// Search finds vocabulary matching query in word, reading, or meaning
-func (r *VocabRepository) Search(query, level string, limit int) ([]models.Vocabulary, error) {
-	like := "%" + query + "%"
-	args := []interface{}{like, like, like}
-	where := "(word LIKE " + r.db.Placeholder(1) + " OR reading LIKE " + r.db.Placeholder(2) + " OR short_meaning LIKE " + r.db.Placeholder(3) + ")"
-
+func (r *VocabRepository) Search(query, level string) ([]*models.Vocabulary, error) {
+	var args []interface{}
+	
+	searchPattern := "%" + query + "%"
+	args = append(args, searchPattern, searchPattern, searchPattern)
+	
+	whereClause := "WHERE (word LIKE $1 OR reading LIKE $2 OR short_meaning LIKE $3)"
+	
 	if level != "" {
+		whereClause += fmt.Sprintf(" AND jlpt_level = $%d", len(args)+1)
 		args = append(args, level)
-		where += " AND jlpt_level = " + r.db.Placeholder(len(args))
 	}
-	args = append(args, limit)
-	sql := "SELECT id, word, reading, short_meaning, jlpt_level FROM vocabulary WHERE " + where + " ORDER BY jlpt_level, index_position LIMIT " + r.db.Placeholder(len(args))
-
-	rows, err := r.db.Query(sql, args...)
+	
+	querySQL := fmt.Sprintf(`
+		SELECT id, word, reading, short_meaning, detailed_explanation,
+		       example_sentences, usage_notes, jlpt_level, index_position, created_at
+		FROM vocabulary
+		%s
+		ORDER BY jlpt_level DESC, index_position ASC
+		LIMIT 20
+	`, whereClause)
+	
+	rows, err := r.db.Query(querySQL, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("search query failed: %w", err)
 	}
 	defer rows.Close()
-
-	var results []models.Vocabulary
+	
+	var results []*models.Vocabulary
 	for rows.Next() {
-		var v models.Vocabulary
-		if err := rows.Scan(&v.ID, &v.Word, &v.Reading, &v.ShortMeaning, &v.JLPTLevel); err != nil {
-			continue
+		vocab := &models.Vocabulary{}
+		err := rows.Scan(
+			&vocab.ID,
+			&vocab.Word,
+			&vocab.Reading,
+			&vocab.ShortMeaning,
+			&vocab.DetailedExplanation,
+			&vocab.ExampleSentences,
+			&vocab.UsageNotes,
+			&vocab.JLPTLevel,
+			&vocab.IndexPosition,
+			&vocab.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
 		}
-		results = append(results, v)
+		results = append(results, vocab)
 	}
+	
 	return results, rows.Err()
 }

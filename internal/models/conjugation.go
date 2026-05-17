@@ -62,6 +62,8 @@ type ConjugationSession struct {
 	StartTime       time.Time `json:"start_time" db:"start_time"`
 	LastActive      time.Time `json:"last_active" db:"last_active"`
 	CompletedForms  []string  `json:"completed_forms" db:"completed_forms"` // JSON array
+	IsWeakPointDrill bool     `json:"is_weak_point_drill,omitempty" db:"is_weak_point_drill"`
+	TargetWeakForm   string    `json:"target_weak_form,omitempty" db:"target_weak_form"`
 }
 
 // ConjugationAttempt records a single attempt
@@ -78,7 +80,7 @@ type ConjugationAttempt struct {
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
-// ConjugationChallengeResponse for API
+// ConjugationChallengeResponse for API (single challenge - legacy)
 type ConjugationChallengeResponse struct {
 	Challenge   *ConjugationChallenge `json:"challenge"`
 	Progress    *ConjugationProgress   `json:"progress"`
@@ -86,19 +88,43 @@ type ConjugationChallengeResponse struct {
 	SessionID   string                 `json:"session_id"`
 }
 
+// ConjugationSessionResponse for API (full session with all challenges)
+type ConjugationSessionResponse struct {
+	Session    *ConjugationSession       `json:"session"`
+	Challenges []*ConjugationChallenge   `json:"challenges"`
+	Progress   *ConjugationProgress      `json:"progress"`
+	FormInfo   *ConjugationFormType      `json:"form_info"`
+}
+
+// WeakForm represents a form with accuracy stats
+type WeakForm struct {
+	Form     string  `json:"form"`
+	Accuracy float64 `json:"accuracy"`
+	Total    int     `json:"total_attempts"`
+}
+
+// WeakPointsAnalysis represents user's weak areas
+type WeakPointsAnalysis struct {
+	WeakForms   []WeakForm `json:"weak_forms"`
+	StrongForms []WeakForm `json:"strong_forms"`
+	TotalForms  int        `json:"total_forms_studied"`
+}
+
 // ConjugationProgress tracks overall progress
 type ConjugationProgress struct {
-	CurrentForm      string             `json:"current_form"`
-	FormsUnlocked    []string           `json:"forms_unlocked"`
-	FormsCompleted   []string           `json:"forms_completed"`
-	FormMastery      map[string]float64 `json:"form_mastery"` // percentage
-	TotalAttempts    int                `json:"total_attempts"`
-	CorrectAttempts  int                `json:"correct_attempts"`
-	AccuracyRate     float64            `json:"accuracy_rate"`
-	CurrentStreak    int                `json:"current_streak"`
-	BestStreak       int                `json:"best_streak"`
-	DailyGoal        int                `json:"daily_goal"`
-	DailyCompleted   int                `json:"daily_completed"`
+	CurrentForm       string             `json:"current_form"`
+	FormsUnlocked     []string           `json:"forms_unlocked"`
+	FormsCompleted    []string           `json:"forms_completed"`
+	FormMastery       map[string]float64 `json:"form_mastery"` // percentage
+	TotalAttempts     int                `json:"total_attempts"`
+	CorrectAttempts   int                `json:"correct_attempts"`
+	AccuracyRate      float64            `json:"accuracy_rate"`
+	CurrentStreak     int                `json:"current_streak"`
+	BestStreak        int                `json:"best_streak"`
+	DailyGoal         int                `json:"daily_goal"`
+	DailyCompleted    int                `json:"daily_completed"`
+	IsWeakPointDrill  bool               `json:"is_weak_point_drill,omitempty"`
+	WeakFormAccuracy  float64            `json:"weak_form_accuracy,omitempty"`
 }
 
 // ConjugationSubmitRequest for answer submission

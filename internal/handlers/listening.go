@@ -1,76 +1,171 @@
 package handlers
 
 import (
+	"net/http"
+
+	"github.com/erwinwahyura/daily-kotoba/internal/middleware"
+	"github.com/erwinwahyura/daily-kotoba/internal/services"
+	"github.com/erwinwahyura/daily-kotoba/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/kotoba-api/internal/middleware"
-	"github.com/yourusername/kotoba-api/internal/models"
-	"github.com/yourusername/kotoba-api/internal/services"
-	"github.com/yourusername/kotoba-api/internal/utils"
 )
 
+// ListeningHandler handles listening practice HTTP requests
 type ListeningHandler struct {
-	listeningService *services.ListeningService
+	service *services.ListeningService
 }
 
-func NewListeningHandler(listeningService *services.ListeningService) *ListeningHandler {
-	return &ListeningHandler{listeningService: listeningService}
+// NewListeningHandler creates a new handler
+func NewListeningHandler(service *services.ListeningService) *ListeningHandler {
+	return &ListeningHandler{
+		service: service,
+	}
 }
 
-// GET /listening/exercises/:level
+// GetExercises returns listening exercises for a JLPT level
 func (h *ListeningHandler) GetExercises(c *gin.Context) {
 	level := c.Param("level")
-	exercises, err := h.listeningService.GetExercises(level)
+	if level == "" {
+		level = "N5"
+	}
+
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		// Could parse limit here
+	}
+
+	response, err := h.service.GetExercisesByLevel(level, limit)
 	if err != nil {
-		utils.SendError(c, 500, "Failed to load exercises", err)
+		utils.SendError(c, http.StatusInternalServerError, "Failed to get exercises", err)
 		return
 	}
-	utils.SendSuccess(c, 200, "", gin.H{"exercises": exercises})
+
+	utils.SendSuccess(c, http.StatusOK, "Exercises retrieved", response)
 }
 
-// GET /listening/exercise/:id
+// GetExercise returns a specific listening exercise
 func (h *ListeningHandler) GetExercise(c *gin.Context) {
 	id := c.Param("id")
-	detail, err := h.listeningService.GetExerciseDetail(id)
-	if err != nil {
-		utils.SendError(c, 404, "Exercise not found", err)
+	if id == "" {
+		utils.SendError(c, http.StatusBadRequest, "Exercise ID is required", nil)
 		return
 	}
-	utils.SendSuccess(c, 200, "", detail)
+
+	exercise, err := h.service.GetExercise(id)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "Exercise not found", err)
+		return
+	}
+
+	utils.SendSuccess(c, http.StatusOK, "Exercise retrieved", exercise)
 }
 
-// POST /listening/session/start
+// StartSessionRequest represents a session start request
+type StartSessionRequest struct {
+	ExerciseID string `json:"exercise_id" binding:"required"`
+}
+
+// StartSession creates a new listening session
 func (h *ListeningHandler) StartSession(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		utils.SendError(c, 401, "Unauthorized", nil)
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		utils.SendError(c, http.StatusUnauthorized, "User not authenticated", nil)
 		return
 	}
-	var req struct {
-		ExerciseID string `json:"exercise_id" binding:"required"`
-	}
+
+	var req StartSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendError(c, 400, "exercise_id required", err)
+		utils.SendError(c, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
-	session, err := h.listeningService.StartSession(userID, req.ExerciseID)
+
+	session, err := h.service.StartSession(userID, req.ExerciseID)
 	if err != nil {
-		utils.SendError(c, 500, "Failed to start session", err)
+		utils.SendError(c, http.StatusInternalServerError, "Failed to start session", err)
 		return
 	}
-	utils.SendSuccess(c, 201, "Session started", session)
+
+	utils.SendSuccess(c, http.StatusOK, "Session started", gin.H{
+		"session_id": session.ID,
+		"exercise_id": session.ExerciseID,
+		"status": session.Status,
+	})
 }
 
-// POST /listening/session/answer
+// SubmitAnswerRequest represents an answer submission
+type SubmitAnswerRequest struct {
+	SessionID     string `json:"session_id" binding:"required"`
+	QuestionID    string `json:"question_id" binding:"required"`
+	Answer        int    `json:"answer" binding:"required,min=0"`
+	AudioPosition int    `json:"audio_position"`
+}
+
+// SubmitAnswer processes a user's answer
 func (h *ListeningHandler) SubmitAnswer(c *gin.Context) {
-	var req models.SubmitListeningAnswerRequest
+	var req SubmitAnswerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendError(c, 400, "Invalid request body", err)
+		utils.SendError(c, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
-	result, err := h.listeningService.SubmitAnswer(req.SessionID, req.QuestionID, req.Answer)
+
+	result, err := h.service.SubmitAnswer(req.SessionID, req.QuestionID, req.Answer, req.AudioPosition)
 	if err != nil {
-		utils.SendError(c, 400, err.Error(), err)
+		utils.SendError(c, http.StatusInternalServerError, "Failed to submit answer", err)
 		return
 	}
-	utils.SendSuccess(c, 200, "", result)
+
+	utils.SendSuccess(c, http.StatusOK, "Answer submitted", gin.H{
+		"correct": result.IsCorrect,
+		"answer":  result.Answer,
+	})
+}
+
+// GetSession retrieves session progress
+func (h *ListeningHandler) GetSession(c *gin.Context) {
+	sessionID := c.Param("id")
+	if sessionID == "" {
+		utils.SendError(c, http.StatusBadRequest, "Session ID is required", nil)
+		return
+	}
+
+	session, err := h.service.GetSession(sessionID)
+	if err != nil {
+		utils.SendError(c, http.StatusNotFound, "Session not found", err)
+		return
+	}
+
+	// Verify user owns this session
+	userID, exists := middleware.GetUserID(c)
+	if !exists || session.UserID != userID {
+		utils.SendError(c, http.StatusForbidden, "Access denied", nil)
+		return
+	}
+
+	utils.SendSuccess(c, http.StatusOK, "Session retrieved", session)
+}
+
+// GetStats returns user's listening statistics
+func (h *ListeningHandler) GetStats(c *gin.Context) {
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		utils.SendError(c, http.StatusUnauthorized, "User not authenticated", nil)
+		return
+	}
+
+	stats, err := h.service.GetUserStats(userID)
+	if err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "Failed to get stats", err)
+		return
+	}
+
+	utils.SendSuccess(c, http.StatusOK, "Stats retrieved", stats)
+}
+
+// SeedExercises seeds sample listening exercises (admin only)
+func (h *ListeningHandler) SeedExercises(c *gin.Context) {
+	if err := h.service.SeedExercises(); err != nil {
+		utils.SendError(c, http.StatusInternalServerError, "Failed to seed exercises", err)
+		return
+	}
+
+	utils.SendSuccess(c, http.StatusOK, "Exercises seeded successfully", nil)
 }
