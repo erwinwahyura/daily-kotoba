@@ -93,7 +93,7 @@ func (h *VocabularyHandler) SearchVocab(c *gin.Context) {
 		return
 	}
 	if results == nil {
-		results = []models.Vocabulary{}
+		results = []*models.Vocabulary{}
 	}
 	utils.SendSuccess(c, 200, "", gin.H{"results": results})
 }

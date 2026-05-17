@@ -296,9 +296,9 @@ func getNextLevel(current string) string {
 }
 
 // SearchVocab finds vocabulary matching query
-func (s *VocabService) SearchVocab(query, level string, limit int) ([]models.Vocabulary, error) {
+func (s *VocabService) SearchVocab(query, level string, limit int) ([]*models.Vocabulary, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
-	return s.vocabRepo.Search(query, level, limit)
+	return s.vocabRepo.Search(query, level)
 }

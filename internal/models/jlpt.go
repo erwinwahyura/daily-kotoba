@@ -90,7 +90,8 @@ type SubmitAnswerRequest struct {
 // StartTestRequest to begin a new test
 type StartTestRequest struct {
 	Level   string `json:"level" binding:"required,oneof=N5 N4 N3 N2 N1"`
-	Section string `json:"section,omitempty"` // Optional: specific section only
+	Section string `json:"section,omitempty"`
+	Count   int    `json:"count,omitempty"` // 0 = all questions; otherwise 5, 10, 20, 50
 }
 
 // Available JLPT levels and their info

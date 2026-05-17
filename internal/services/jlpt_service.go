@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,9 +28,8 @@ func (s *JLPTService) GetLevelInfo() []map[string]interface{} {
 	return models.GetJLPTLevelInfo()
 }
 
-// StartTest begins a new test session
-func (s *JLPTService) StartTest(userID string, level, section string) (*models.UserTestSession, []models.JLPTQuestion, error) {
-	// Get available tests for level
+// StartTest begins a new test session. count=0 means all questions.
+func (s *JLPTService) StartTest(userID string, level, section string, count int) (*models.UserTestSession, []models.JLPTQuestion, error) {
 	tests, err := s.jlptRepo.GetTestsByLevel(level)
 	if err != nil {
 		return nil, nil, err
@@ -38,29 +38,43 @@ func (s *JLPTService) StartTest(userID string, level, section string) (*models.U
 		return nil, nil, fmt.Errorf("no tests available for level %s", level)
 	}
 
-	// Find test by section or use first available
-	var selectedTest *models.JLPTTest
+	// Collect questions from all matching tests (or one section if specified)
+	var allQuestions []models.JLPTQuestion
+	var primaryTestID string
 	for _, t := range tests {
-		if section == "" || t.Section == section {
-			selectedTest = &t
-			break
+		if section != "" && t.Section != section {
+			continue
 		}
+		if primaryTestID == "" {
+			primaryTestID = t.ID
+		}
+		qs, err := s.jlptRepo.GetQuestionsByTestID(t.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+		allQuestions = append(allQuestions, qs...)
 	}
-	if selectedTest == nil {
-		selectedTest = &tests[0]
+	if len(allQuestions) == 0 {
+		return nil, nil, fmt.Errorf("no questions available for level %s", level)
 	}
 
-	// Get questions
-	questions, err := s.jlptRepo.GetQuestionsByTestID(selectedTest.ID)
-	if err != nil {
-		return nil, nil, err
+	// Shuffle and limit
+	rand.Shuffle(len(allQuestions), func(i, j int) {
+		allQuestions[i], allQuestions[j] = allQuestions[j], allQuestions[i]
+	})
+	if count > 0 && count < len(allQuestions) {
+		allQuestions = allQuestions[:count]
 	}
 
-	// Create session
+	// Re-number questions after shuffle/slice
+	for i := range allQuestions {
+		allQuestions[i].QuestionNum = i + 1
+	}
+
 	session := &models.UserTestSession{
 		ID:        uuid.New().String(),
 		UserID:    userID,
-		TestID:    selectedTest.ID,
+		TestID:    primaryTestID,
 		Level:     level,
 		StartedAt: time.Now(),
 		Status:    "in_progress",
@@ -71,7 +85,7 @@ func (s *JLPTService) StartTest(userID string, level, section string) (*models.U
 		return nil, nil, err
 	}
 
-	return session, questions, nil
+	return session, allQuestions, nil
 }
 
 // SubmitAnswer records an answer during a test

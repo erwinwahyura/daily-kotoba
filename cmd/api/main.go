@@ -193,14 +193,11 @@ func main() {
 			vocab := protected.Group("/vocab")
 			{
 				vocab.GET("/daily", vocabHandler.GetDailyWord)
+				vocab.GET("/level/:level", vocabHandler.GetVocabularyByLevel)
 				vocab.GET("/search", vocabHandler.SearchVocab)
 				vocab.GET("/:id", vocabHandler.GetVocabByID)
 				vocab.POST("/:id/skip", vocabHandler.SkipWord)
 			}
-
-			// Vocabulary by level route (outside /vocab group for cleaner URL)
-			protected.GET("/vocab/level/:level", vocabHandler.GetVocabularyByLevel)
-			protected.GET("/vocab/search", vocabHandler.SearchVocabulary)
 
 			// Progress routes
 			progress := protected.Group("/progress")
@@ -213,42 +210,40 @@ func main() {
 			grammar := protected.Group("/grammar")
 			{
 				grammar.GET("/daily", grammarHandler.GetDailyPattern)
+				grammar.GET("/level/:level", grammarHandler.GetPatternsByLevel)
 				grammar.GET("/search", grammarHandler.SearchGrammar)
 				grammar.GET("/compare/pairs", grammarHandler.GetComparisonPairs)
 				grammar.GET("/compare/detail", grammarHandler.ComparePatterns)
 				grammar.GET("/:id", grammarHandler.GetPatternByID)
 				grammar.POST("/:id/skip", grammarHandler.SkipPattern)
 			}
-			protected.GET("/grammar/level/:level", grammarHandler.GetPatternsByLevel)
-			protected.GET("/grammar/search", grammarHandler.SearchGrammar)
 
 			// SRS (Spaced Repetition) routes
 			srs := protected.Group("/srs")
 			{
-				srs.GET("/queue", srsHandler.GetReviewQueue)      // Get items due for review
-				srs.POST("/review", srsHandler.SubmitReview)     // Submit a review
-				srs.GET("/stats", srsHandler.GetSRSStats)        // Get SRS statistics
-				srs.POST("/init", srsHandler.InitializeItem)     // Add new item to SRS
+				srs.GET("/queue", srsHandler.GetReviewQueue)
+				srs.POST("/review", srsHandler.SubmitReview)
+				srs.GET("/stats", srsHandler.GetSRSStats)
+				srs.POST("/init", srsHandler.InitializeItem)
 			}
 
 			// Conjugation Drill routes
 			conjugation := protected.Group("/conjugation")
 			{
-				conjugation.GET("/start", conjHandler.StartSession)     // Start drill session
-				conjugation.POST("/answer", conjHandler.SubmitAnswer)    // Submit answer
-				conjugation.GET("/progress", conjHandler.GetProgress)    // Get progress stats
-				conjugation.GET("/weak-points", conjHandler.GetWeakPoints) // Get weak points analysis
-				conjugation.POST("/weak-points/drill", conjHandler.StartWeakPointDrill) // Start weak point drill
+				conjugation.GET("/start", conjHandler.StartSession)
+				conjugation.POST("/answer", conjHandler.SubmitAnswer)
+				conjugation.GET("/progress", conjHandler.GetProgress)
+				conjugation.GET("/weak-points", conjHandler.GetWeakPoints)
+				conjugation.POST("/weak-points/drill", conjHandler.StartWeakPointDrill)
 			}
 
 			// TTS (Text-to-Speech) routes
 			tts := protected.Group("/tts")
 			{
-				tts.POST("/generate", ttsHandler.GenerateTTS)        // Generate audio
-				tts.GET("/voices", ttsHandler.GetVoices)             // Get available voices
-				tts.GET("/stats", ttsHandler.GetCacheStats)           // Get cache statistics
+				tts.POST("/generate", ttsHandler.GenerateTTS)
+				tts.GET("/voices", ttsHandler.GetVoices)
+				tts.GET("/stats", ttsHandler.GetCacheStats)
 			}
-			// Public audio file serving (no auth needed for playback)
 			v1.GET("/tts/audio/:id", ttsHandler.GetAudio)
 
 			// JLPT Mock Test routes
@@ -267,22 +262,26 @@ func main() {
 			goals := protected.Group("/goals")
 			{
 				goals.GET("/daily", goalsHandler.GetDailyProgress)
+				goals.POST("/progress", goalsHandler.UpdateProgress)
+				goals.GET("/settings", goalsHandler.GetSettings)
+				goals.PUT("/settings", goalsHandler.UpdateSettings)
 				goals.GET("/streak", goalsHandler.GetStreak)
-				goals.GET("/achievements", goalsHandler.GetUserAchievements)
+				goals.GET("/achievements", goalsHandler.GetAchievements)
 				goals.GET("/achievements/all", goalsHandler.GetAllAchievements)
 				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)
-				goals.GET("/settings", goalsHandler.GetSettings)
-				goals.PUT("/settings", goalsHandler.SaveSettings)
-				goals.POST("/progress", goalsHandler.RecordActivity)
 			}
 
 			// Kanji writing practice
 			kanji := protected.Group("/kanji")
 			{
-				kanji.GET("/character/:kanji", kanjiHandler.GetCharacter)
-				kanji.POST("/practice/start", kanjiHandler.StartPractice)
+				kanji.GET("/level/:level", kanjiHandler.GetKanjiByLevel)
+				kanji.GET("/character/:char", kanjiHandler.GetKanjiByCharacter)
+				kanji.POST("/practice/start", kanjiHandler.StartPracticeSession)
 				kanji.POST("/practice/compare", kanjiHandler.CompareStroke)
+				kanji.GET("/practice/:id", kanjiHandler.GetPracticeSession)
+				kanji.GET("/stats", kanjiHandler.GetUserStats)
 			}
+			protected.POST("/kanji/seed", kanjiHandler.SeedKanjiData)
 
 			// Listening practice
 			listening := protected.Group("/listening")
@@ -291,56 +290,20 @@ func main() {
 				listening.GET("/exercise/:id", listeningHandler.GetExercise)
 				listening.POST("/session/start", listeningHandler.StartSession)
 				listening.POST("/session/answer", listeningHandler.SubmitAnswer)
+				listening.GET("/session/:id", listeningHandler.GetSession)
+				listening.GET("/stats", listeningHandler.GetStats)
 			}
-
-			// Kanji Writing Practice routes
-			kanji := protected.Group("/kanji")
-			{
-				kanji.GET("/level/:level", kanjiHandler.GetKanjiByLevel)      // Get kanji by JLPT level
-				kanji.GET("/character/:char", kanjiHandler.GetKanjiByCharacter) // Get kanji details
-				kanji.POST("/practice/start", kanjiHandler.StartPracticeSession) // Start practice session
-				kanji.POST("/practice/compare", kanjiHandler.CompareStroke)     // Compare stroke
-				kanji.GET("/practice/:id", kanjiHandler.GetPracticeSession)     // Get session
-				kanji.GET("/stats", kanjiHandler.GetUserStats)                   // Get user stats
-			}
-			// Admin: Seed kanji data
-			protected.POST("/kanji/seed", kanjiHandler.SeedKanjiData)
-
-			// Goals, Streaks, and Achievements routes
-			goals := protected.Group("/goals")
-			{
-				goals.GET("/daily", goalsHandler.GetDailyProgress)      // Get today's progress
-				goals.POST("/progress", goalsHandler.UpdateProgress)    // Update activity progress
-				goals.GET("/settings", goalsHandler.GetSettings)       // Get goal settings
-				goals.PUT("/settings", goalsHandler.UpdateSettings)    // Update goal settings
-				goals.GET("/streak", goalsHandler.GetStreak)            // Get streak info
-				goals.GET("/achievements", goalsHandler.GetAchievements) // Get earned achievements
-				goals.GET("/achievements/all", goalsHandler.GetAllAchievements) // Get all available
-				goals.GET("/weekly", goalsHandler.GetWeeklyProgress)    // Get last 7 days
-			}
-
-			// Listening Practice routes
-			listening := protected.Group("/listening")
-			{
-				listening.GET("/exercises/:level", listeningHandler.GetExercises) // Get exercises by level
-				listening.GET("/exercise/:id", listeningHandler.GetExercise)        // Get specific exercise
-				listening.POST("/session/start", listeningHandler.StartSession)    // Start listening session
-				listening.POST("/session/answer", listeningHandler.SubmitAnswer)   // Submit answer
-				listening.GET("/session/:id", listeningHandler.GetSession)          // Get session progress
-				listening.GET("/stats", listeningHandler.GetStats)                  // Get user stats
-			}
-			// Admin: Seed listening exercises
 			protected.POST("/listening/seed", listeningHandler.SeedExercises)
 
-			// Nichijou Conversation routes (Phase 1: AI Chat)
+			// Nichijou Conversation routes
 			nichijou := protected.Group("/nichijou")
 			{
-				nichijou.GET("/scenarios", conversationHandler.GetScenarios)      // Get available scenarios
-				nichijou.POST("/chat/start", conversationHandler.StartChat)       // Start AI conversation
-				nichijou.POST("/chat/message", conversationHandler.SendMessage)   // Send message
-				nichijou.POST("/chat/end/:id", conversationHandler.EndSession)    // End session
-				nichijou.GET("/chat/history/:id", conversationHandler.GetSessionHistory) // Get session history
-				nichijou.GET("/stats", conversationHandler.GetUserStats)          // Get user stats
+				nichijou.GET("/scenarios", conversationHandler.GetScenarios)
+				nichijou.POST("/chat/start", conversationHandler.StartChat)
+				nichijou.POST("/chat/message", conversationHandler.SendMessage)
+				nichijou.POST("/chat/end/:id", conversationHandler.EndSession)
+				nichijou.GET("/chat/history/:id", conversationHandler.GetSessionHistory)
+				nichijou.GET("/stats", conversationHandler.GetUserStats)
 			}
 		}
 	}

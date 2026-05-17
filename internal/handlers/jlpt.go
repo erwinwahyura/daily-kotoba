@@ -53,7 +53,7 @@ func (h *JLPTHandler) StartTest(c *gin.Context) {
 		return
 	}
 
-	session, questions, err := h.jlptService.StartTest(userID, req.Level, req.Section)
+	session, questions, err := h.jlptService.StartTest(userID, req.Level, req.Section, req.Count)
 	if err != nil {
 		utils.SendError(c, 500, "Failed to start test", err)
 		return
