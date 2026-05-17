@@ -93,6 +93,7 @@ func main() {
 	goalsRepo := repository.NewGoalsRepository(wrappedDB)
 	listeningRepo := repository.NewListeningRepository(wrappedDB)
 	conversationRepo := repository.NewConversationRepository(wrappedDB)
+	readingRepo := repository.NewReadingRepository(wrappedDB)
 
 	// Seed static data (kanji, listening exercises, conversation scenarios)
 	log.Println("Seeding static data...")
@@ -125,6 +126,7 @@ func main() {
 	goalsService := services.NewGoalsService(goalsRepo)
 	listeningService := services.NewListeningService(listeningRepo)
 	conversationService := services.NewConversationService(conversationRepo)
+	readingService := services.NewReadingService(readingRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -140,6 +142,7 @@ func main() {
 	goalsHandler := handlers.NewGoalsHandler(goalsService)
 	listeningHandler := handlers.NewListeningHandler(listeningService)
 	conversationHandler := handlers.NewConversationHandler(conversationService)
+	readingHandler := handlers.NewReadingHandler(readingService)
 
 	// Set up Gin router
 	if cfg.Server.Env == "production" {
@@ -294,6 +297,15 @@ func main() {
 				listening.GET("/stats", listeningHandler.GetStats)
 			}
 			protected.POST("/listening/seed", listeningHandler.SeedExercises)
+
+			// Reading comprehension routes
+			reading := protected.Group("/reading")
+			{
+				reading.GET("/articles/:level", readingHandler.GetArticles)
+				reading.GET("/article/:id", readingHandler.GetArticle)
+				reading.GET("/random/:level", readingHandler.GetRandomArticle)
+				reading.POST("/submit", readingHandler.SubmitAnswers)
+			}
 
 			// Nichijou Conversation routes
 			nichijou := protected.Group("/nichijou")

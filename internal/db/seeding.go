@@ -375,6 +375,8 @@ func (db *DB) RunAutoSeeding(seedsDir string) error {
 			count, err = db.SeedKanji(path)
 		} else if strings.Contains(name, "listening") {
 			count, err = db.SeedListening(path)
+		} else if strings.Contains(name, "reading") {
+			count, err = db.SeedReading(path)
 		} else {
 			// Unknown type, try generic approach
 			log.Printf("Unknown seed type for %s, skipping", name)
@@ -620,6 +622,53 @@ func (db *DB) SeedListening(seedFile string) (int, error) {
 			}
 		}
 	}
+	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
+	_ = db.MarkSeedApplied(seedData.Name, checksum, count)
+	return count, nil
+}
+
+// SeedReading inserts reading articles and questions from seed file
+func (db *DB) SeedReading(seedFile string) (int, error) {
+	seedData, err := LoadSeedJSON(seedFile)
+	if err != nil {
+		return 0, err
+	}
+	applied, err := db.IsSeedApplied(seedData.Name)
+	if err != nil {
+		return 0, err
+	}
+	if applied {
+		return 0, nil
+	}
+
+	p := func(n int) string { return db.Placeholder(n) }
+	count := 0
+	for _, record := range seedData.Records {
+		recordType, _ := record["type"].(string)
+
+		if recordType == "article" {
+			query := "INSERT OR IGNORE INTO reading_articles (id, jlpt_level, title, text, topic, difficulty, word_count) VALUES (" +
+				p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ", " + p(7) + ")"
+			_, insertErr := db.Exec(query,
+				record["id"], record["jlpt_level"], record["title"], record["text"],
+				record["topic"], record["difficulty"], record["word_count"],
+			)
+			if insertErr == nil {
+				count++
+			}
+		} else if recordType == "question" {
+			query := "INSERT OR IGNORE INTO reading_questions (id, article_id, question_num, question, options, correct_index, explanation) VALUES (" +
+				p(1) + ", " + p(2) + ", " + p(3) + ", " + p(4) + ", " + p(5) + ", " + p(6) + ", " + p(7) + ")"
+			_, insertErr := db.Exec(query,
+				record["id"], record["article_id"], record["question_num"], record["question"],
+				record["options"], record["correct_index"], record["explanation"],
+			)
+			if insertErr == nil {
+				count++
+			}
+		}
+	}
+
 	checksum := fmt.Sprintf("records:%d", len(seedData.Records))
 	_ = db.MarkSeedApplied(seedData.Name, checksum, count)
 	return count, nil
