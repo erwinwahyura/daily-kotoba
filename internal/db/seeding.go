@@ -231,7 +231,7 @@ func (db *DB) SeedGrammar(seedFile string) (int, error) {
 		}
 
 		query := fmt.Sprintf(
-			"INSERT INTO grammar_patterns (%s) VALUES (%s)",
+			"INSERT INTO grammar_patterns (%s) VALUES (%s) ON CONFLICT (id) DO UPDATE SET index_position = EXCLUDED.index_position, usage_examples = EXCLUDED.usage_examples, related_patterns = EXCLUDED.related_patterns, common_mistakes = EXCLUDED.common_mistakes",
 			strings.Join(columns, ", "),
 			strings.Join(placeholders, ", "),
 		)
