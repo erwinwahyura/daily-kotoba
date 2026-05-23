@@ -219,7 +219,7 @@ func (db *DB) SeedGrammar(seedFile string) (int, error) {
 			placeholders = append(placeholders, db.Placeholder(len(values)+1))
 			
 			// Handle JSON fields
-			if col == "usage_examples" || col == "related_patterns" || col == "common_mistakes" {
+			if col == "usage_examples" || col == "related_patterns" || col == "common_mistakes" || col == "quiz_questions" {
 				jsonVal, err := db.JSONValue(val)
 				if err != nil {
 					return count, fmt.Errorf("failed to marshal JSON for %s: %w", col, err)

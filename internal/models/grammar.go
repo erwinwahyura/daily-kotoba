@@ -10,18 +10,59 @@ import (
 // GrammarPattern represents an N3-N1 grammar form with detailed teaching content
 type GrammarPattern struct {
 	ID                   string           `json:"id" db:"id"`
-	Pattern              string           `json:"pattern" db:"pattern"`                      // 〜わけにはいかない
-	PlainForm            string           `json:"plain_form" db:"plain_form"`                // わけにはいかない
-	Meaning              string           `json:"meaning" db:"meaning"`                      // "cannot afford to; must not"
+	Pattern              string           `json:"pattern" db:"pattern"`
+	PlainForm            string           `json:"plain_form" db:"plain_form"`
+	Meaning              string           `json:"meaning" db:"meaning"`
 	DetailedExplanation  string           `json:"detailed_explanation" db:"detailed_explanation"`
-	ConjugationRules     string           `json:"conjugation_rules" db:"conjugation_rules"`  // How to attach
-	UsageExamples        UsageExamples    `json:"usage_examples" db:"usage_examples"`         // Rich examples
-	NuanceNotes          string           `json:"nuance_notes" db:"nuance_notes"`           // When vs alternatives
+	ConjugationRules     string           `json:"conjugation_rules" db:"conjugation_rules"`
+	UsageExamples        UsageExamples    `json:"usage_examples" db:"usage_examples"`
+	NuanceNotes          string           `json:"nuance_notes" db:"nuance_notes"`
 	JLPTLevel            string           `json:"jlpt_level" db:"jlpt_level"`
-	RelatedPatterns      RelatedPatterns  `json:"related_patterns" db:"related_patterns"`     // Confusable forms
+	RelatedPatterns      RelatedPatterns  `json:"related_patterns" db:"related_patterns"`
 	CommonMistakes       string           `json:"common_mistakes" db:"common_mistakes"`
 	IndexPosition        int              `json:"index_position" db:"index_position"`
+	QuizQuestions        QuizQuestions    `json:"quiz_questions" db:"quiz_questions"`
+	SomatomeWeek         int              `json:"somatome_week" db:"somatome_week"`
+	SomatomeDay          int              `json:"somatome_day" db:"somatome_day"`
+	Source               string           `json:"source" db:"source"`
 	CreatedAt            time.Time        `json:"created_at" db:"created_at"`
+}
+
+// QuizQuestion is a multiple-choice question for a grammar pattern
+type QuizQuestion struct {
+	ID           string   `json:"id"`
+	Question     string   `json:"question"`     // Japanese sentence with blank ___
+	English      string   `json:"english"`      // English hint
+	Options      []string `json:"options"`      // 4 choices
+	CorrectIndex int      `json:"correct_index"`
+	Explanation  string   `json:"explanation"`
+}
+
+// QuizQuestions is a custom JSON type
+type QuizQuestions []QuizQuestion
+
+func (qq *QuizQuestions) Scan(value interface{}) error {
+	if value == nil {
+		*qq = []QuizQuestion{}
+		return nil
+	}
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal QuizQuestions: got %T", value)
+	}
+	return json.Unmarshal(bytes, qq)
+}
+
+func (qq QuizQuestions) Value() (driver.Value, error) {
+	if qq == nil {
+		return "[]", nil
+	}
+	return json.Marshal(qq)
 }
 
 // UsageExample pairs a sentence with detailed explanation

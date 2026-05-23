@@ -22,7 +22,9 @@ func (r *GrammarRepository) GetByLevelAndIndex(level string, index int) (*models
 	query := `
 		SELECT id, pattern, plain_form, meaning, detailed_explanation,
 		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
-		       related_patterns, common_mistakes, index_position, created_at
+		       related_patterns, common_mistakes, index_position,
+		       COALESCE(quiz_questions, '[]'), COALESCE(somatome_week, 0), COALESCE(somatome_day, 0), COALESCE(source, ''),
+		       created_at
 		FROM grammar_patterns
 		WHERE jlpt_level = $1 AND index_position = $2
 	`
@@ -39,6 +41,10 @@ func (r *GrammarRepository) GetByLevelAndIndex(level string, index int) (*models
 		&pattern.RelatedPatterns,
 		&pattern.CommonMistakes,
 		&pattern.IndexPosition,
+		&pattern.QuizQuestions,
+		&pattern.SomatomeWeek,
+		&pattern.SomatomeDay,
+		&pattern.Source,
 		&pattern.CreatedAt,
 	)
 
@@ -57,14 +63,17 @@ func (r *GrammarRepository) GetByPattern(patternName string, level string) (*mod
 	query := `
 		SELECT id, pattern, plain_form, meaning, detailed_explanation,
 		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
-		       related_patterns, common_mistakes, index_position, created_at
+		       related_patterns, common_mistakes, index_position,
+		       COALESCE(quiz_questions, '[]'), COALESCE(somatome_week, 0), COALESCE(somatome_day, 0), COALESCE(source, ''),
+		       created_at
 		FROM grammar_patterns
 		WHERE pattern = $1 AND jlpt_level = $2
 	`
 	err := r.db.QueryRow(query, patternName, level).Scan(
 		&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
 		&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
-		&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+		&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition,
+		&p.QuizQuestions, &p.SomatomeWeek, &p.SomatomeDay, &p.Source, &p.CreatedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -78,7 +87,9 @@ func (r *GrammarRepository) GetByID(id string) (*models.GrammarPattern, error) {
 	query := `
 		SELECT id, pattern, plain_form, meaning, detailed_explanation,
 		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
-		       related_patterns, common_mistakes, index_position, created_at
+		       related_patterns, common_mistakes, index_position,
+		       COALESCE(quiz_questions, '[]'), COALESCE(somatome_week, 0), COALESCE(somatome_day, 0), COALESCE(source, ''),
+		       created_at
 		FROM grammar_patterns
 		WHERE id = $1
 	`
@@ -95,6 +106,10 @@ func (r *GrammarRepository) GetByID(id string) (*models.GrammarPattern, error) {
 		&pattern.RelatedPatterns,
 		&pattern.CommonMistakes,
 		&pattern.IndexPosition,
+		&pattern.QuizQuestions,
+		&pattern.SomatomeWeek,
+		&pattern.SomatomeDay,
+		&pattern.Source,
 		&pattern.CreatedAt,
 	)
 
@@ -121,7 +136,9 @@ func (r *GrammarRepository) GetByLevel(level string, page, limit int) ([]models.
 	query := `
 		SELECT id, pattern, plain_form, meaning, detailed_explanation,
 		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
-		       related_patterns, common_mistakes, index_position, created_at
+		       related_patterns, common_mistakes, index_position,
+		       COALESCE(quiz_questions, '[]'), COALESCE(somatome_week, 0), COALESCE(somatome_day, 0), COALESCE(source, ''),
+		       created_at
 		FROM grammar_patterns
 		WHERE jlpt_level = $1
 		ORDER BY index_position
@@ -139,7 +156,8 @@ func (r *GrammarRepository) GetByLevel(level string, page, limit int) ([]models.
 		err := rows.Scan(
 			&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
 			&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
-			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition,
+			&p.QuizQuestions, &p.SomatomeWeek, &p.SomatomeDay, &p.Source, &p.CreatedAt,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -219,7 +237,9 @@ func (r *GrammarRepository) Search(query, level string) ([]*models.GrammarPatter
 	querySQL := fmt.Sprintf(`
 		SELECT id, pattern, plain_form, meaning, detailed_explanation,
 		       conjugation_rules, usage_examples, nuance_notes, jlpt_level,
-		       related_patterns, common_mistakes, index_position, created_at
+		       related_patterns, common_mistakes, index_position,
+		       COALESCE(quiz_questions, '[]'), COALESCE(somatome_week, 0), COALESCE(somatome_day, 0), COALESCE(source, ''),
+		       created_at
 		FROM grammar_patterns
 		%s
 		ORDER BY jlpt_level DESC, index_position ASC
@@ -238,7 +258,8 @@ func (r *GrammarRepository) Search(query, level string) ([]*models.GrammarPatter
 		err := rows.Scan(
 			&p.ID, &p.Pattern, &p.PlainForm, &p.Meaning, &p.DetailedExplanation,
 			&p.ConjugationRules, &p.UsageExamples, &p.NuanceNotes, &p.JLPTLevel,
-			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition, &p.CreatedAt,
+			&p.RelatedPatterns, &p.CommonMistakes, &p.IndexPosition,
+			&p.QuizQuestions, &p.SomatomeWeek, &p.SomatomeDay, &p.Source, &p.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
