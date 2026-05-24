@@ -681,9 +681,19 @@ func (db *DB) insertJLPTTest(record map[string]interface{}) error {
 }
 
 func (db *DB) insertJLPTQuestion(record map[string]interface{}) error {
-	optionsJSON, _ := json.Marshal(record["options"])
+	// LoadSeedJSON stores JSON arrays as raw string values to preserve structure.
+	// Using json.Marshal on an already-string value would double-encode it, so use
+	// the string directly when options is already a JSON string.
+	var optionsStr string
+	switch v := record["options"].(type) {
+	case string:
+		optionsStr = v
+	default:
+		b, _ := json.Marshal(v)
+		optionsStr = string(b)
+	}
 	query := `INSERT INTO jlpt_questions (id, test_id, question_num, type, question, question_reading, english_prompt, options, correct_index, explanation, point_value, skill_tested) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	ON CONFLICT (id) DO UPDATE SET options = EXCLUDED.options, correct_index = EXCLUDED.correct_index, explanation = EXCLUDED.explanation`
-	_, err := db.Exec(query, record["id"], record["test_id"], record["question_num"], record["type"], record["question"], record["question_reading"], record["english_prompt"], string(optionsJSON), record["correct_index"], record["explanation"], record["point_value"], record["skill_tested"])
+	_, err := db.Exec(query, record["id"], record["test_id"], record["question_num"], record["type"], record["question"], record["question_reading"], record["english_prompt"], optionsStr, record["correct_index"], record["explanation"], record["point_value"], record["skill_tested"])
 	return err
 }
